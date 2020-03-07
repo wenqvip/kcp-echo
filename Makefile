@@ -34,7 +34,7 @@ ARG_m32=#-m32 #compile for 32-bit
 ARG_v=#-v
 ARG_g=-g #for gdb
 ARG_O=#-O2 #optimization
-STD=c++11 #c++ feature
+STD=c++17 #c++ feature
 
 # if you have some other directories need to be compile before this directory,
 # add them here for example: PRE_MAKE_DIRS=../a_lib_proj

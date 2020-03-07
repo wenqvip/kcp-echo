@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "*.txt": "log",
+        "algorithm": "cpp"
+    }
+}
