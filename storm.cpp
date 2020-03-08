@@ -17,6 +17,7 @@ void storm::create_session(const char* host, int port)
     m_kcp = ikcp_create(0, &m_user);
     m_kcp->output = storm::udp_output;
     ikcp_setmtu(m_kcp, 1472);
+    ikcp_nodelay(m_kcp, 1, 10, 2, 1);
 
     std::thread(std::bind(std::mem_fn(&storm::loop), this)).detach();
 }
@@ -88,7 +89,7 @@ int storm::create_socket(const char* host, int port)
 
 int storm::udp_output(const char* buf, int len, ikcpcb* kcp, void* user)
 {
-    std::cout << "use udp sending " << std::string(buf, len) << std::endl;
+    std::cout << "use udp sending " << len << " bytes" << std::endl;
     kcp_user* kuser = (kcp_user*)user;
     ssize_t ret = ::send(kuser->sockfd, buf, len, 0);
     if (ret <= 0)
