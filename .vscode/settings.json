@@ -1,3 +1,13 @@
 {
-    "C_Cpp.default.includePath": ["./", "/usr/include/c++/8/"]
+    "C_Cpp.default.includePath": [
+        "./",
+        "/usr/include/c++/8/"
+    ],
+    "C_Cpp.default.intelliSenseMode": "gcc-x64",
+    "files.associations": {
+        "*.txt": "log",
+        "chrono": "cpp",
+        "thread": "cpp",
+        "functional": "cpp"
+    }
 }
