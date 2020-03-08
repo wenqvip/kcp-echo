@@ -14,8 +14,8 @@ int main(int argc, const char* argv[])
     parser.add_argument("-s", "--server").help("server mode").default_value(true);
     parser.add_argument("-c", "--client").help("client mode").default_value(false);
     parser.add_argument("host")
-        .help("remote ip, default: 127.0.0.1")
-        .default_value("127.0.0.1")
+        .help("remote ip, default: 0.0.0.0")
+        .default_value("0.0.0.0")
         .required();
     parser.add_argument("port")
         .help("remote port, default: 1060")
