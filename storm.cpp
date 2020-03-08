@@ -19,7 +19,7 @@ void storm::create_session(const char* host, int port)
     m_kcp->output = storm::udp_output;
     ikcp_setmtu(m_kcp, 1472);
 
-    std::thread(std::bind(std::mem_fn(&storm::loop), this));
+    std::thread(std::bind(std::mem_fn(&storm::loop), this)).detach();
 }
 
 size_t storm::send(const char* buf, size_t len)
