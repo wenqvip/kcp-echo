@@ -25,7 +25,7 @@ size_t storm::send(const char* buf, size_t len)
 {
     std::cout << "sending " << std::string(buf, len) << std::endl;
     int ret = ikcp_send(m_kcp, buf, len);
-    if (ret <= 0)
+    if (ret < 0)
         std::cout << "sending error" << std::endl;
     return ret;
 }
@@ -35,7 +35,7 @@ bool storm::can_read()
     return m_can_read;
 }
 
-size_t storm::recv(char* buf, size_t len)
+ssize_t storm::recv(char* buf, size_t len)
 {
     return ikcp_recv(m_kcp, buf, len);
 }

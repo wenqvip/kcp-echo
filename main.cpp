@@ -90,7 +90,7 @@ int main(int argc, const char* argv[])
 
             do {
                 char buf[128] = {0};
-                size_t count = stm.recv(buf, 128);
+                ssize_t count = stm.recv(buf, 128);
                 if(count > 0)
                 {
                     std::cout << buf << std::endl;

@@ -19,7 +19,7 @@ public:
     void create_session(const char* host, int port);
     size_t send(const char* buf, size_t len);
     bool can_read();
-    size_t recv(char* buf, size_t len);
+    ssize_t recv(char* buf, size_t len);
 
 protected:
     int create_socket(const char* host, int port);
