@@ -54,7 +54,7 @@ void storm::loop()
 
         do {
             char buf[128] = {0};
-            size_t count = ::recv(m_user.sockfd, buf, 128, 0);
+            ssize_t count = ::recv(m_user.sockfd, buf, 128, 0);
             if (count > 0)
             {
                 std::cout << "receive " << std::string(buf, count) << std::endl;
