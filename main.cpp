@@ -38,7 +38,7 @@ int udp_output(const char* buf, int len, ikcpcb* kcp, void* user)
     return send(kuser->sockfd, buf, len, 0);
 }
 
-int main(int argc, char** argv)
+int main(int argc, const char* argv[])
 {
     argparse::ArgumentParser parser("kcp test");
     parser.add_argument("-s", "--server")
