@@ -1,5 +1,5 @@
 #include "ikcp.h"
-#include "argparse.h"
+#include "argparse.hpp"
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -40,21 +40,16 @@ int udp_output(const char* buf, int len, ikcpcb* kcp, void* user)
 
 int main(int argc, char** argv)
 {
-    ArgumentParser parser("kcp test");
-    parser.add_argument()
-        .names({"-s", "--server"})
-        .description("server mode");
-    parser.add_argument()
-        .names({"-c", "--client"})
-        .description("client mode");
-    parser.add_argument()
-        .name("host")
-        .description("remote ip")
-        .required(true);
-    parser.add_argument()
-        .name("port")
-        .description("remote port, default: 1060")
-        .required(true)
+    argparse::ArgumentParser parser("kcp test");
+    parser.add_argument("-s", "--server")
+        .help("server mode");
+    parser.add_argument("-c", "--client")
+        .help("client mode");
+    parser.add_argument("host")
+        .help("remote ip, default: 127.0.0.1")
+        .default_value("127.0.0.1");
+    parser.add_argument("port")
+        .help("remote port, default: 1060")
         .default_value(1060);
 
     try {
