@@ -6,14 +6,13 @@
 
 #include <fcntl.h>
 
-storm::storm(): m_kcp(nullptr), m_can_read(false)
+storm::storm(): m_kcp(nullptr), m_can_read(false), m_last_update_t(0)
 {
 
 }
 
 void storm::create_session(const char* host, int port)
 {
-    m_tp_now = std::chrono::steady_clock().now();
     m_user.sockfd = create_socket(host, port);
     m_kcp = ikcp_create(0, &m_user);
     m_kcp->output = storm::udp_output;
@@ -24,7 +23,11 @@ void storm::create_session(const char* host, int port)
 
 size_t storm::send(const char* buf, size_t len)
 {
-    return ikcp_send(m_kcp, buf, len);
+    std::cout << "sending " << std::string(buf, len) << std::endl;
+    int ret = ikcp_send(m_kcp, buf, len);
+    if (ret <= 0)
+        std::cout << "sending error" << std::endl;
+    return ret;
 }
 
 bool storm::can_read()
@@ -41,16 +44,20 @@ void storm::loop()
 {
     while(true)
     {
-        m_tp_now = std::chrono::steady_clock().now();
-        int time_now = m_tp_now.time_since_epoch().count();
-        if (ikcp_check(m_kcp, time_now))
+        std::chrono::time_point<std::chrono::steady_clock> now = std::chrono::steady_clock().now();
+        int time_now = now.time_since_epoch().count();
+        if (time_now > m_last_update_t + 10)
+        {
             ikcp_update(m_kcp, time_now);
+            m_last_update_t = time_now;
+        }
 
         do {
             char buf[128] = {0};
             size_t count = ::recv(m_user.sockfd, buf, 128, 0);
             if (count > 0)
             {
+                std::cout << "receive " << std::string(buf, count) << std::endl;
                 m_can_read = true;
                 ikcp_input(m_kcp, buf, count);
                 if(count < 128)
@@ -81,8 +88,12 @@ int storm::create_socket(const char* host, int port)
 
 int storm::udp_output(const char* buf, int len, ikcpcb* kcp, void* user)
 {
+    std::cout << "use udp sending " << std::string(buf, len) << std::endl;
     kcp_user* kuser = (kcp_user*)user;
-    return ::send(kuser->sockfd, buf, len, 0);
+    ssize_t ret = ::send(kuser->sockfd, buf, len, 0);
+    if (ret <= 0)
+        std::cout << "sending error" << std::endl;
+    return ret;
 }
 
 bool storm::set_socket_blocking(int fd, bool blocking)

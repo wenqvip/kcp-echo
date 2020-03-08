@@ -30,6 +30,6 @@ protected:
 private:
     ikcpcb* m_kcp;
     kcp_user m_user;
-    std::chrono::time_point<std::chrono::steady_clock> m_tp_now;
+    long m_last_update_t;
     bool m_can_read;
 };

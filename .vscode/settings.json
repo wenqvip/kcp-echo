@@ -8,6 +8,7 @@
         "*.txt": "log",
         "chrono": "cpp",
         "thread": "cpp",
-        "functional": "cpp"
+        "functional": "cpp",
+        "*.tcc": "cpp"
     }
 }

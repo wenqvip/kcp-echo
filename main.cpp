@@ -34,6 +34,8 @@ int main(int argc, const char* argv[])
     storm stm;
     stm.create_session(parser.get<const char*>("host"), parser.get<int>("port"));
     if (parser["-s"] == true) {
+        std::cout << "running as server at " << parser.get<const char*>("host")
+            << ":" << parser.get<int>("port") << std::endl;
         std::stringstream ss;
         do {
             char buf[128] = {0};
@@ -64,6 +66,8 @@ int main(int argc, const char* argv[])
 
     }
     else if (parser["-c"] == true) {
+        std::cout << "running as client, remote " << parser.get<const char*>("host")
+            << ":" << parser.get<int>("port") << std::endl;
         while(true) {
             int c = getchar();
             char buf[1];
