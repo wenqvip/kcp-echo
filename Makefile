@@ -9,9 +9,9 @@
 # any others, a excutable file will be made.
 OUT=storm
 
-CC=gcc-8
-CXX=g++-8
-LD=g++-8
+CC=gcc
+CXX=g++
+LD=g++
 
 # you change here
 SRCS=$(wildcard *.cpp)
