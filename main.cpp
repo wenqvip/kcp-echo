@@ -14,8 +14,8 @@ int main(int argc, const char* argv[])
     parser.add_argument("-s", "--server").help("server mode").default_value(false).implicit_value(true);
     parser.add_argument("-c", "--client").help("client mode").default_value(false).implicit_value(true);
     parser.add_argument("host")
-        .help("remote ip, default: 0.0.0.0")
-        .default_value(std::string("0.0.0.0"))
+        .help("remote ip, default: 127.0.0.1")
+        .default_value(std::string("127.0.0.1"))
         .required();
     parser.add_argument("port")
         .help("remote port, default: 1060")
@@ -46,7 +46,17 @@ int main(int argc, const char* argv[])
     }
 
     storm stm;
-    stm.create_session(parser.get<std::string>("host").c_str(), parser.get<int>("port"));
+    if (server_mode)
+    {
+        stm.accept_session(parser.get<std::string>("host").c_str(), parser.get<int>("port"));
+    }
+    else if (client_mode)
+    {
+        stm.create_session(parser.get<std::string>("host").c_str(), parser.get<int>("port"));
+    }
+
+    stm.update();
+
     if (server_mode) {
         std::cout << "running as server at " << parser.get<std::string>("host")
             << ":" << parser.get<int>("port") << std::endl;
@@ -77,7 +87,6 @@ int main(int argc, const char* argv[])
                 break;
             }
         } while (true);
-
     }
     else if (client_mode) {
         std::cout << "running as client, remote " << parser.get<std::string>("host")

@@ -10,26 +10,24 @@
 class storm
 {
 public:
-    struct kcp_user
-    {
-        int sockfd;
-    };
-public:
     storm();
     void create_session(const char* host, int port);
+    void accept_session(const char* host, int port);
+    void bind_port(int port);
     size_t send(const char* buf, size_t len);
     bool can_read();
     ssize_t recv(char* buf, size_t len);
+    void update();
 
 protected:
-    int create_socket(const char* host, int port);
-    void loop();
+    void create_kcp();
     static int udp_output(const char* buf, int len, ikcpcb* kcp, void* user);
     bool set_socket_blocking(int fd, bool blocking);
 
 private:
     ikcpcb* m_kcp;
-    kcp_user m_user;
     long m_last_update_t;
     bool m_can_read;
+    int m_sockfd;
+    sockaddr_in m_remote_addr;
 };
