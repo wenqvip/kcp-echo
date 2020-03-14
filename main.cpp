@@ -45,53 +45,54 @@ int main(int argc, const char* argv[])
         return -1;
     }
 
+    std::string host = parser.get<std::string>("host");
+    int port = parser.get<int>("port");
     storm stm;
     if (server_mode)
     {
-        stm.accept_session(parser.get<std::string>("host").c_str(), parser.get<int>("port"));
+        std::cout << "running as server at " << host << ":" << port << std::endl;
+        stm.accept_session(host.c_str(), port);
     }
     else if (client_mode)
     {
-        stm.create_session(parser.get<std::string>("host").c_str(), parser.get<int>("port"));
+        std::cout << "running as client, remote " << host << ":" << port << std::endl;
+        stm.create_session(host.c_str(), port);
     }
 
-    stm.update();
 
-    if (server_mode) {
-        std::cout << "running as server at " << parser.get<std::string>("host")
-            << ":" << parser.get<int>("port") << std::endl;
-        std::stringstream ss;
-        do {
-            char buf[128] = {0};
-            size_t count = stm.recv(buf, 128);
-            if(count > 0)
-            {
-                int len = count;
-                while(len > 0)
+    std::stringstream ss;
+    do {
+        stm.update();
+
+        if (server_mode) {
+            do {
+                char buf[128] = {0};
+                ssize_t count = stm.recv(buf, 128);
+                if(count > 0)
                 {
-                    char ch = buf[count - len];
-                    ss << ch;
-                    if (ch == '\n')
+                    int len = count;
+                    while(len > 0)
                     {
-                        std::string str;
-                        ss >> str;
-                        stm.send(str.c_str(), str.size());
+                        char ch = buf[count - len];
+                        ss << ch;
+                        if (ch == '\n')
+                        {
+                            std::string str;
+                            ss >> str;
+                            stm.send(str.c_str(), str.size());
+                        }
+                        len--;
                     }
-                    len--;
+                    if (count < 128)
+                        break;
                 }
-                if (count < 128)
+                else
+                {
                     break;
-            }
-            else
-            {
-                break;
-            }
-        } while (true);
-    }
-    else if (client_mode) {
-        std::cout << "running as client, remote " << parser.get<std::string>("host")
-            << ":" << parser.get<int>("port") << std::endl;
-        while(true) {
+                }
+            } while(true);
+        }
+        else if (client_mode) {
             int c = getchar();
             char buf[1];
             buf[0] = c;
@@ -112,7 +113,7 @@ int main(int argc, const char* argv[])
                 }
             } while (true);
         }
-    }
+    } while (true);
 
     return 0;
 }

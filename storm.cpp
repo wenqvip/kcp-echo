@@ -49,7 +49,7 @@ void storm::create_kcp()
 
 size_t storm::send(const char* buf, size_t len)
 {
-    std::cout << "sending " << std::string(buf, len) << std::endl;
+    std::cout << "sending " << len << " byets:" << std::string(buf, len) << std::endl;
     int ret = ikcp_send(m_kcp, buf, len);
     if (ret < 0)
         std::cout << "sending error" << std::endl;
@@ -69,9 +69,10 @@ ssize_t storm::recv(char* buf, size_t len)
 void storm::update()
 {
     std::chrono::time_point<std::chrono::steady_clock> now = std::chrono::steady_clock().now();
-    int time_now = now.time_since_epoch().count();
-    if (time_now > m_last_update_t + 10)
+    int time_now = std::chrono::time_point_cast<std::chrono::milliseconds>(now).time_since_epoch().count();
+    if (time_now > m_last_update_t + 100)
     {
+        //std::cout << "storm update" << std::endl;
         ikcp_update(m_kcp, time_now);
         m_last_update_t = time_now;
     }
@@ -87,7 +88,7 @@ void storm::update()
         {
             std::memcpy(&m_remote_addr, &addrinfo, sizeof(m_remote_addr));
         }
-        
+
         if (addrinfo.sin_addr.s_addr == m_remote_addr.sin_addr.s_addr)
         {
             std::cout << "receive " << std::string(buf, count) << std::endl;
