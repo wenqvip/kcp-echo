@@ -1,3 +1,4 @@
+#include "util.h"
 #include "ikcp.h"
 #include "argparse.hpp"
 #include "storm.h"

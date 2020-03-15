@@ -1,11 +1,13 @@
-#include "storm.h"
 #include "util.h"
+#include "storm.h"
 
 #include <iostream>
 #include <functional>
 #include <cstring>
 
+#ifdef LINUX
 #include <fcntl.h>
+#endif
 
 storm::storm(): m_kcp(nullptr), m_can_read(false), m_last_update_t(0)
 {
@@ -113,10 +115,17 @@ int storm::udp_output(const char* buf, int len, ikcpcb* kcp, void* user)
 
 bool storm::set_socket_blocking(int fd, bool blocking)
 {
+#ifdef LINUX
     if (fd < 0) return false;
 
     int flags = fcntl(fd, F_GETFL, 0);
     if (flags == -1) return false;
     flags = blocking ? (flags & ~O_NONBLOCK) : (flags | O_NONBLOCK);
     return (fcntl(fd, F_SETFL, flags) == 0) ? true : false;
+#endif
+
+#if defined(_WIN64) || defined(_WIN32)
+    u_long mode = blocking ? 0 : 1;
+    return ioctlsocket(fd, FIONBIO, &mode) == NO_ERROR ? true : false;
+#endif
 }

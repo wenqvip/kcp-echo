@@ -2,3 +2,6 @@ deps
 objs
 storm
 .vscode
+.vs
+vsproject/x64
+vsproject/*.user

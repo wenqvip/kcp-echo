@@ -1,9 +1,17 @@
 #include "ikcp.h"
 
+#if defined(_WIN64) || defined(_WIN32)
+#include <winsock2.h>  
+
+#pragma comment(lib, "ws2_32.lib")
+#endif
+
+#ifdef LINUX
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#endif
 
 #include <chrono>
 
@@ -13,7 +21,6 @@ public:
     storm();
     void create_session(const char* host, int port);
     void accept_session(const char* host, int port);
-    void bind_port(int port);
     size_t send(const char* buf, size_t len);
     bool can_read();
     ssize_t recv(char* buf, size_t len);
