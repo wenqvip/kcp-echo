@@ -78,7 +78,7 @@ int main(int argc, const char* argv[])
                     {
                         char ch = buf[count - len];
                         ss << ch;
-                        if (ch == '\n')
+                        if (ch == ' ')
                         {
                             std::string str;
                             ss >> str;
