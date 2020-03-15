@@ -15,6 +15,7 @@ public:
     bool can_read();
     ssize_t recv(char* buf, size_t len);
     void update();
+    inline void log(bool on) { m_logging = on; }
 
 protected:
     void create_kcp();
@@ -27,4 +28,5 @@ private:
     bool m_can_read;
     socket_t m_sockfd;
     sockaddr_in m_remote_addr;
+    bool m_logging;
 };

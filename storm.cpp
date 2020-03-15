@@ -75,7 +75,8 @@ void storm::create_kcp()
 
 size_t storm::send(const char* buf, size_t len)
 {
-    std::cout << "sending " << len << " byets:" << str_to_hex(buf, len) << std::endl;
+    if (m_logging)
+        std::cout << "sending " << len << " byets:" << str_to_hex(buf, len) << std::endl;
     int ret = ikcp_send(m_kcp, buf, len);
     if (ret < 0)
         std::cout << "sending error" << std::endl;
@@ -113,13 +114,15 @@ void storm::update()
         if (m_remote_addr.sin_addr.s_addr == 0)
         {
             std::memcpy(&m_remote_addr, &addrinfo, sizeof(m_remote_addr));
-            std::cout << "new connect from " << inet_ntoa(addrinfo.sin_addr) << ":" << ntohs(addrinfo.sin_port) << std::endl;
+            if (m_logging)
+                std::cout << "new connect from " << inet_ntoa(addrinfo.sin_addr) << ":" << ntohs(addrinfo.sin_port) << std::endl;
             send(nullptr, 0);
         }
 
         if (addrinfo.sin_addr.s_addr == m_remote_addr.sin_addr.s_addr)
         {
-            std::cout << "receive " << count << " bytes:" << str_to_hex(buf, count) << std::endl;
+            if (m_logging)
+                std::cout << "receive " << count << " bytes:" << str_to_hex(buf, count) << std::endl;
             m_can_read = true;
             ikcp_input(m_kcp, buf, count);
         }
@@ -136,8 +139,9 @@ void storm::update()
 
 int storm::udp_output(const char* buf, int len, ikcpcb* kcp, void* user)
 {
-    std::cout << "use udp sending " << len << " bytes:" << str_to_hex(buf, len) << std::endl;
     storm* pstorm = (storm*)user;
+    if (pstorm->m_logging)
+        std::cout << "use udp sending " << len << " bytes:" << str_to_hex(buf, len) << std::endl;
     ssize_t ret = ::sendto(pstorm->m_sockfd, buf, len, 0, (const sockaddr*)&(pstorm->m_remote_addr), sizeof(sockaddr_in));
     if (ret <= 0)
         std::cout << "sending error" << std::endl;
