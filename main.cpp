@@ -93,11 +93,6 @@ int main(int argc, const char* argv[])
             } while(true);
         }
         else if (client_mode) {
-            int c = getchar();
-            char buf[1];
-            buf[0] = c;
-            stm.send(buf, 1);
-
             do {
                 char buf[128] = {0};
                 ssize_t count = stm.recv(buf, 128);
@@ -112,6 +107,11 @@ int main(int argc, const char* argv[])
                     break;
                 }
             } while (true);
+
+            // int c = getchar();
+            // char buf[1];
+            // buf[0] = c;
+            // stm.send(buf, 1);
         }
     } while (true);
 
