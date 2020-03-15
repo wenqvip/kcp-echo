@@ -20,6 +20,9 @@ int storm::init()
     WORD sockVersion = MAKEWORD(2, 2);
     return WSAStartup(sockVersion, &wsaData);
 #endif
+#ifdef LINUX
+    return 0;
+#endif
 }
 
 int storm::de_init()
@@ -27,6 +30,9 @@ int storm::de_init()
 #if defined(_WIN64) || defined(_WIN32)
     closesocket(m_sockfd);
     return WSACleanup();
+#endif
+#ifdef LINUX
+    return 0;
 #endif
 }
 
