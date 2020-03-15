@@ -19,6 +19,7 @@ typedef SOCKET socket_t;
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <unistd.h>
 
 typedef int socket_t;
 #endif

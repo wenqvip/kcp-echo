@@ -50,6 +50,7 @@ int main(int argc, const char* argv[])
     int port = parser.get<int>("port");
     storm stm;
     stm.init();
+    stm.log(false);
     if (server_mode)
     {
         std::cout << "running as server at " << host << ":" << port << std::endl;
@@ -110,10 +111,23 @@ int main(int argc, const char* argv[])
                 }
             } while (true);
 
-            // int c = getchar();
-            // char buf[1];
-            // buf[0] = c;
-            // stm.send(buf, 1);
+#ifdef LINUX
+            char c;
+            fd_set readSet;
+            FD_ZERO(&readSet);
+            FD_SET(STDIN_FILENO, &readSet);
+            struct timeval tv = {1, 0};  // 10 seconds, 0 microseconds;
+            if (select(STDIN_FILENO+1, &readSet, NULL, NULL, &tv) < 0)
+                perror("select");
+
+            if (FD_ISSET(STDIN_FILENO, &readSet))
+            {
+                std::cin>>c;
+                char buf[1];
+                buf[0] = c;
+                stm.send(buf, 1);
+            }
+#endif
         }
     } while (true);
 
