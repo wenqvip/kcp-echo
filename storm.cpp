@@ -9,7 +9,7 @@
 #include <fcntl.h>
 #endif
 
-storm::storm(): m_kcp(nullptr), m_can_read(false), m_last_update_t(0)
+storm::storm(): m_kcp(nullptr), m_can_read(false), m_last_update_t(0), m_logging(true)
 {
 }
 
