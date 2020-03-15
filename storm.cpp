@@ -73,7 +73,7 @@ void storm::update()
 {
     std::chrono::time_point<std::chrono::steady_clock> now = std::chrono::steady_clock().now();
     int time_now = std::chrono::time_point_cast<std::chrono::milliseconds>(now).time_since_epoch().count();
-    if (time_now > m_last_update_t + 100)
+    if (time_now > m_last_update_t + 10)
     {
         //std::cout << "storm update" << std::endl;
         ikcp_update(m_kcp, time_now);
