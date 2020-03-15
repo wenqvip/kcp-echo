@@ -25,7 +25,7 @@ REJECT_SRCS= # example: a.cpp b.cpp
 #vpath %.cpp ./subfold2
 
 # some options
-DEFINES= # example: MACRO1 MACRO2
+DEFINES=LINUX # example: MACRO1 MACRO2
 INCLUDE_PATH= # example: ../test_lib ../test_lib2
 LIBRARY_PATH= # exampel: ../test_lib ../test_lib2
 STATIC_LIB= # example: ../test_lib/test.a ../test_lib/test2.a
