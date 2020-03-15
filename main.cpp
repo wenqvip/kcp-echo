@@ -78,7 +78,7 @@ int main(int argc, const char* argv[])
                     {
                         char ch = buf[count - len];
                         ss << ch;
-                        if (ch == ' ')
+                        if (ch == '\n')
                         {
                             std::string str;
                             ss >> str;
@@ -117,7 +117,7 @@ int main(int argc, const char* argv[])
             fd_set readSet;
             FD_ZERO(&readSet);
             FD_SET(STDIN_FILENO, &readSet);
-            struct timeval tv = {1, 0};  // 10 seconds, 0 microseconds;
+            struct timeval tv = {0, 10};  // 10 seconds, 0 microseconds;
             if (select(STDIN_FILENO+1, &readSet, NULL, NULL, &tv) < 0)
                 perror("select");
 
