@@ -49,6 +49,7 @@ int main(int argc, const char* argv[])
     std::string host = parser.get<std::string>("host");
     int port = parser.get<int>("port");
     storm stm;
+    stm.init();
     if (server_mode)
     {
         std::cout << "running as server at " << host << ":" << port << std::endl;

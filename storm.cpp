@@ -11,12 +11,28 @@
 
 storm::storm(): m_kcp(nullptr), m_can_read(false), m_last_update_t(0)
 {
-
 }
 
-void storm::create_session(const char* host, int port)
+int storm::init()
 {
-    m_sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+#if defined(_WIN64) || defined(_WIN32)
+    WSADATA wsaData;
+    WORD sockVersion = MAKEWORD(2, 2);
+    return WSAStartup(sockVersion, &wsaData);
+#endif
+}
+
+int storm::de_init()
+{
+#if defined(_WIN64) || defined(_WIN32)
+    closesocket(m_sockfd);
+    return WSACleanup();
+#endif
+}
+
+int storm::create_session(const char* host, int port)
+{
+    m_sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     set_socket_blocking(m_sockfd, false);
     
     m_remote_addr.sin_family = AF_INET;
@@ -24,14 +40,14 @@ void storm::create_session(const char* host, int port)
     m_remote_addr.sin_port = htons(port);
 
     create_kcp();
-    send(nullptr, 0);
+    return send(nullptr, 0);
 }
 
-void storm::accept_session(const char* host, int port)
+int storm::accept_session(const char* host, int port)
 {
     std::memset(&m_remote_addr, 0, sizeof(m_remote_addr));
 
-    m_sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+    m_sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     set_socket_blocking(m_sockfd, false);
     sockaddr_in addr_info;
     addr_info.sin_family = AF_INET;
@@ -40,6 +56,7 @@ void storm::accept_session(const char* host, int port)
     ::bind(m_sockfd, (const sockaddr*)&addr_info, sizeof(addr_info));
 
     create_kcp();
+    return 0;
 }
 
 void storm::create_kcp()
@@ -82,7 +99,7 @@ void storm::update()
 
     char buf[128] = {0};
     sockaddr_in addrinfo;
-    socklen_t len;
+    socklen_t len = sizeof(addrinfo);
     ssize_t count = ::recvfrom(m_sockfd, buf, 128, 0, (sockaddr*)&addrinfo, &len);
 
     if (count > 0)
@@ -100,6 +117,14 @@ void storm::update()
             m_can_read = true;
             ikcp_input(m_kcp, buf, count);
         }
+    }
+    else if (count < 0)
+    {
+#if defined(_WIN64) || defined(_WIN32)
+        int error = WSAGetLastError();
+        if (error != WSAEWOULDBLOCK)
+            std::cout << "error " << error << " occurs when call recvfrom" << std::endl;
+#endif
     }
 }
 
