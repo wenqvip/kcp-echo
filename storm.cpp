@@ -19,7 +19,7 @@ void storm::create_session(const char* host, int port)
     
     m_remote_addr.sin_family = AF_INET;
     m_remote_addr.sin_addr.s_addr = inet_addr(host);
-    m_remote_addr.sin_port = port;
+    m_remote_addr.sin_port = htons(port);
 
     create_kcp();
     send(nullptr, 0);
@@ -34,7 +34,7 @@ void storm::accept_session(const char* host, int port)
     sockaddr_in addr_info;
     addr_info.sin_family = AF_INET;
     addr_info.sin_addr.s_addr = inet_addr(host);
-    addr_info.sin_port = port;
+    addr_info.sin_port = htons(port);
     ::bind(m_sockfd, (const sockaddr*)&addr_info, sizeof(addr_info));
 
     create_kcp();
@@ -88,7 +88,7 @@ void storm::update()
         if (m_remote_addr.sin_addr.s_addr == 0)
         {
             std::memcpy(&m_remote_addr, &addrinfo, sizeof(m_remote_addr));
-            std::cout << "new connect from " << inet_ntoa(addrinfo.sin_addr) << ":" << addrinfo.sin_port << std::endl;
+            std::cout << "new connect from " << inet_ntoa(addrinfo.sin_addr) << ":" << ntohs(addrinfo.sin_port) << std::endl;
             send(nullptr, 0);
         }
 
