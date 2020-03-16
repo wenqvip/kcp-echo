@@ -1,9 +1,4 @@
-#include <string>
-
-typedef unsigned char uchar;
-typedef unsigned short ushort;
-typedef unsigned int uint;
-typedef unsigned long ulong;
+#pragma once
 
 #if defined(_WIN64) || defined(_WIN32)
 #include <winsock2.h>  
@@ -23,5 +18,12 @@ typedef SOCKET socket_t;
 
 typedef int socket_t;
 #endif
+
+#include <string>
+
+typedef unsigned char uchar;
+typedef unsigned short ushort;
+typedef unsigned int uint;
+typedef unsigned long ulong;
 
 std::string str_to_hex(const char* str, int len);
