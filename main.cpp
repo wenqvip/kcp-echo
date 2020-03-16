@@ -8,6 +8,8 @@
 
 #include <string>
 #include <iostream>
+#include <thread>
+#include <mutex>
 
 int main(int argc, const char* argv[])
 {
@@ -61,11 +63,27 @@ int main(int argc, const char* argv[])
         std::cout << "running as client, remote " << host << ":" << port << std::endl;
         stm.create_session(host.c_str(), port);
     }
+    std::mutex _mutex;
 
+    std::thread([&]{
+        while (true) {
+            int c;
+            c = getchar();
+            char buf[1];
+            buf[0] = c;
+            {
+                std::lock_guard<std::mutex> guard(_mutex);
+                stm.send(buf, 1);
+            }
+        }
+    }).detach();
 
     std::stringstream ss;
     do {
-        stm.update();
+        {
+            std::lock_guard<std::mutex> guard(_mutex);
+            stm.update();
+        }
 
         if (server_mode) {
             do {
@@ -99,7 +117,11 @@ int main(int argc, const char* argv[])
         else if (client_mode) {
             do {
                 char buf[128] = {0};
-                ssize_t count = stm.recv(buf, 128);
+                ssize_t count = 0;
+                {
+                    std::lock_guard<std::mutex> guard(_mutex);
+                    count = stm.recv(buf, 128);
+                }
                 if(count > 0)
                 {
                     std::cout << buf << std::endl;
@@ -111,24 +133,6 @@ int main(int argc, const char* argv[])
                     break;
                 }
             } while (true);
-
-#ifdef LINUX
-            char c;
-            fd_set readSet;
-            FD_ZERO(&readSet);
-            FD_SET(STDIN_FILENO, &readSet);
-            struct timeval tv = {0, 10};  // 10 seconds, 0 microseconds;
-            if (select(STDIN_FILENO+1, &readSet, NULL, NULL, &tv) < 0)
-                perror("select");
-
-            if (FD_ISSET(STDIN_FILENO, &readSet))
-            {
-                c = getchar();
-                char buf[1];
-                buf[0] = c;
-                stm.send(buf, 1);
-            }
-#endif
         }
     } while (true);
 
