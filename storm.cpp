@@ -76,7 +76,7 @@ void storm::create_kcp()
 size_t storm::send(const char* buf, size_t len)
 {
     if (m_logging)
-        std::cout << "sending " << len << " byets:" << str_to_hex(buf, len) << std::endl;
+        log("send ", buf, len);
     int ret = ikcp_send(m_kcp, buf, len);
     if (ret < 0)
         std::cout << "sending error" << std::endl;
@@ -114,15 +114,14 @@ void storm::update()
         if (m_remote_addr.sin_addr.s_addr == 0)
         {
             std::memcpy(&m_remote_addr, &addrinfo, sizeof(m_remote_addr));
-            if (m_logging)
-                std::cout << "new connect from " << inet_ntoa(addrinfo.sin_addr) << ":" << ntohs(addrinfo.sin_port) << std::endl;
+            std::cout << "new connect from " << inet_ntoa(addrinfo.sin_addr) << ":" << ntohs(addrinfo.sin_port) << std::endl;
             send(nullptr, 0);
         }
 
         if (addrinfo.sin_addr.s_addr == m_remote_addr.sin_addr.s_addr)
         {
             if (m_logging)
-                std::cout << "receive " << count << " bytes:" << str_to_hex(buf, count) << std::endl;
+                log("receive ", buf, len);
             m_can_read = true;
             ikcp_input(m_kcp, buf, count);
         }
@@ -141,7 +140,7 @@ int storm::udp_output(const char* buf, int len, ikcpcb* kcp, void* user)
 {
     storm* pstorm = (storm*)user;
     if (pstorm->m_logging)
-        std::cout << "use udp sending " << len << " bytes:" << str_to_hex(buf, len) << std::endl;
+        pstorm->log("use udp sending ", buf, len);
     ssize_t ret = ::sendto(pstorm->m_sockfd, buf, len, 0, (const sockaddr*)&(pstorm->m_remote_addr), sizeof(sockaddr_in));
     if (ret <= 0)
         std::cout << "sending error" << std::endl;
@@ -163,4 +162,16 @@ bool storm::set_socket_blocking(int fd, bool blocking)
     u_long mode = blocking ? 0 : 1;
     return ioctlsocket(fd, FIONBIO, &mode) == NO_ERROR ? true : false;
 #endif
+}
+
+void storm::log(const char* prefix, const char* buf, size_t len)
+{
+    std::cout << prefix << len << " bytes: ";
+    if (len >= 24)
+    {
+        std::cout << str_to_hex(buf, 24);
+        buf += 24;
+        len -= 24;
+    }
+    std::cout << std::string(buf, len) << std::endl;
 }
