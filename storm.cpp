@@ -67,7 +67,7 @@ int storm::accept_session(const char* host, int port)
 
 void storm::create_kcp()
 {
-    m_kcp = ikcp_create(0, this);
+    m_kcp = ikcp_create(0xCBCBCBCB, this);
     m_kcp->output = storm::udp_output;
     ikcp_setmtu(m_kcp, 1472);
     ikcp_nodelay(m_kcp, 1, 10, 2, 1);
@@ -140,7 +140,7 @@ int storm::udp_output(const char* buf, int len, ikcpcb* kcp, void* user)
 {
     storm* pstorm = (storm*)user;
     if (pstorm->m_logging)
-        pstorm->log("use udp sending ", buf, len);
+        pstorm->log("use udp send ", buf, len);
     ssize_t ret = ::sendto(pstorm->m_sockfd, buf, len, 0, (const sockaddr*)&(pstorm->m_remote_addr), sizeof(sockaddr_in));
     if (ret <= 0)
         std::cout << "sending error" << std::endl;
@@ -167,7 +167,7 @@ bool storm::set_socket_blocking(int fd, bool blocking)
 void storm::log(const char* prefix, const char* buf, size_t len)
 {
     std::cout << prefix << len << " bytes: ";
-    if (len >= 24)
+    if (len >= 24 && int(buf) == 0xCDCDCDCD)
     {
         std::cout << str_to_hex(buf, 24);
         buf += 24;
