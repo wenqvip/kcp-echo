@@ -16,6 +16,7 @@ int main(int argc, const char* argv[])
     argparse::ArgumentParser parser("kcp test");
     parser.add_argument("-s", "--server").help("server mode").default_value(false).implicit_value(true);
     parser.add_argument("-c", "--client").help("client mode").default_value(false).implicit_value(true);
+    parser.add_argument("-l", "--logging").help("logging on").default_value(false).implicit_value(true);
     parser.add_argument("host")
         .help("remote ip, default: 127.0.0.1")
         .default_value(std::string("127.0.0.1"))
@@ -38,6 +39,7 @@ int main(int argc, const char* argv[])
 
     parser["-c"];
 
+    bool logging = (parser["-l"] == true);
     bool client_mode = (parser["-c"] == true);
     if (!server_mode && !client_mode)
         server_mode = true;
@@ -52,7 +54,7 @@ int main(int argc, const char* argv[])
     int port = parser.get<int>("port");
     storm stm;
     stm.init();
-    stm.log(false);
+    stm.log(logging);
     if (server_mode)
     {
         std::cout << "running as server at " << host << ":" << port << std::endl;
