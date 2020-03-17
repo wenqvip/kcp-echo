@@ -167,7 +167,7 @@ bool storm::set_socket_blocking(int fd, bool blocking)
 void storm::log(const char* prefix, const char* buf, size_t len)
 {
     std::cout << prefix << len << " bytes: ";
-    if (len >= 24 && *((int*)buf) == 0xCDCDCDCD)
+    if (len >= 24 && *((int*)buf) == 0xcbcbcbcb)
     {
         std::cout << str_to_hex(buf, 24);
         buf += 24;
