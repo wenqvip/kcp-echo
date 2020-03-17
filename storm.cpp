@@ -107,7 +107,7 @@ void storm::update()
     char buf[1472] = {0};
     sockaddr_in addrinfo;
     socklen_t len = sizeof(addrinfo);
-    ssize_t count = ::recvfrom(m_sockfd, buf, 128, 0, (sockaddr*)&addrinfo, &len);
+    ssize_t count = ::recvfrom(m_sockfd, buf, 1472, 0, (sockaddr*)&addrinfo, &len);
 
     if (count > 0)
     {
