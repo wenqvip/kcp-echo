@@ -91,7 +91,7 @@ int main(int argc, const char* argv[])
             if (count > 0) {
                 stm.send(buf, count);
             }
-            else if (count < 0) {
+            else if (count < -1) {
                 std::cout << "error when recv: " << count << std::endl;
             }
         }
@@ -105,7 +105,7 @@ int main(int argc, const char* argv[])
             if (count > 0) {
                 std::cout << std::string(buf, count) << std::endl;
             }
-            else if (count < 0) {
+            else if (count < -1) {
                 std::cout << "error when recv: " << count << std::endl;
             }
         }
