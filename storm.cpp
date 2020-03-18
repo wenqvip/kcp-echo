@@ -69,6 +69,8 @@ void storm::create_kcp()
 {
     m_kcp = ikcp_create(0xCBCBCBCB, this);
     m_kcp->output = storm::udp_output;
+    m_kcp->logmask = 0xFFFF;
+    m_kcp->writelog = log_callback;
     ikcp_setmtu(m_kcp, 1472);
     ikcp_nodelay(m_kcp, 1, 10, 2, 1);
 }
@@ -145,6 +147,11 @@ int storm::udp_output(const char* buf, int len, ikcpcb* kcp, void* user)
     if (ret <= 0)
         std::cout << "sending error" << std::endl;
     return ret;
+}
+
+void storm::log_callback(const char* log, struct IKCPCB* kcp, void* user)
+{
+    std::cout << log << std::endl;
 }
 
 bool storm::set_socket_blocking(int fd, bool blocking)
