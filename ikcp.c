@@ -964,7 +964,7 @@ void ikcp_flush(ikcpcb *kcp)
 		ikcp_ack_get(kcp, i, &seg.sn, &seg.ts);
 		ptr = ikcp_encode_seg(ptr, &seg);
 		if (ikcp_canlog(kcp, IKCP_LOG_SEND)) {
-			ikcp_log(kcp, IKCP_LOG_SEND, "send ack sn=%lu", (unsigned long)seg.sn);
+			ikcp_log(kcp, IKCP_LOG_SEND, "output ack sn=%lu", (unsigned long)seg.sn);
 		}
 	}
 
