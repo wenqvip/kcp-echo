@@ -86,53 +86,28 @@ int main(int argc, const char* argv[])
         }
 
         if (server_mode) {
-            do {
-                char buf[128] = {0};
-                ssize_t count = stm.recv(buf, 128);
-                if(count > 0)
-                {
-                    int len = count;
-                    while(len > 0)
-                    {
-                        char ch = buf[count - len];
-                        ss << ch;
-                        if (ch == '\n')
-                        {
-                            std::string str;
-                            ss >> str;
-                            std::cout << "echo: " << str << std::endl;
-                            stm.send(str.c_str(), str.size());
-                        }
-                        len--;
-                    }
-                    if (count < 128)
-                        break;
-                }
-                else
-                {
-                    break;
-                }
-            } while(true);
+            char buf[4096] = { 0 };
+            ssize_t count = stm.recv(buf, 4096);
+            if (count > 0) {
+                stm.send(buf, count);
+            }
+            else if (count < 0) {
+                std::cout << "error when recv: " << count << std::endl;
+            }
         }
         else if (client_mode) {
-            do {
-                char buf[128] = {0};
-                ssize_t count = 0;
-                {
-                    std::lock_guard<std::mutex> guard(_mutex);
-                    count = stm.recv(buf, 128);
-                }
-                if(count > 0)
-                {
-                    std::cout << buf << std::endl;
-                    if (count < 128)
-                        break;
-                }
-                else
-                {
-                    break;
-                }
-            } while (true);
+            char buf[4096] = { 0 };
+            ssize_t count = 0;
+            {
+                std::lock_guard<std::mutex> guard(_mutex);
+                count = stm.recv(buf, 4096);
+            }
+            if (count > 0) {
+                std::cout << std::string(buf, count) << std::endl;
+            }
+            else if (count < 0) {
+                std::cout << "error when recv: " << count << std::endl;
+            }
         }
     } while (true);
 

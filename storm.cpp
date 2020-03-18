@@ -71,8 +71,10 @@ void storm::create_kcp()
     m_kcp->output = storm::udp_output;
     m_kcp->logmask = 0xFFFF;
     m_kcp->writelog = log_callback;
+    m_kcp->rcv_wnd = 4096;
+    m_kcp->snd_wnd = 4096;
     ikcp_setmtu(m_kcp, 1472);
-    ikcp_nodelay(m_kcp, 1, 10, 2, 1);
+    //ikcp_nodelay(m_kcp, 1, 10, 2, 1);
 }
 
 size_t storm::send(const char* buf, size_t len)
