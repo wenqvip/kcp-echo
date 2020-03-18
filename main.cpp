@@ -102,7 +102,7 @@ int main(int argc, const char* argv[])
                         {
                             std::string str;
                             ss >> str;
-                            std::cout << "sending " << str << std::endl;
+                            std::cout << "echo: " << str << std::endl;
                             stm.send(str.c_str(), str.size());
                         }
                         len--;
