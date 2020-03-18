@@ -69,13 +69,11 @@ int main(int argc, const char* argv[])
 
     std::thread([&]{
         while (true) {
-            int c;
-            c = getchar();
-            char buf[1];
-            buf[0] = c;
+            std::string input;
+            std::cin >> input;
             {
                 std::lock_guard<std::mutex> guard(_mutex);
-                stm.send(buf, 1);
+                stm.send(input.c_str(), input.size());
             }
         }
     }).detach();
