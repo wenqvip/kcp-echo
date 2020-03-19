@@ -95,13 +95,18 @@ ssize_t storm::recv(char* buf, size_t len)
     return ikcp_recv(m_kcp, buf, len);
 }
 
+bool storm::wait_remote()
+{
+    return m_remote_addr.sin_addr.s_addr == 0;
+}
+
 void storm::update()
 {
     static int cumulative_time = 0;
     std::chrono::time_point<std::chrono::steady_clock> now = std::chrono::steady_clock().now();
     int time_now = std::chrono::time_point_cast<std::chrono::milliseconds>(now).time_since_epoch().count();
     cumulative_time += time_now - m_last_update_t;
-    if (cumulative_time > 10000)
+    if (wait_remote() && cumulative_time > 10000)
     {
         cumulative_time = 0;
         ikcp_send(m_kcp, nullptr, 0);
@@ -119,7 +124,7 @@ void storm::update()
 
     if (count > 0)
     {
-        if (m_remote_addr.sin_addr.s_addr == 0)
+        if (wait_remote())
         {
             std::memcpy(&m_remote_addr, &addrinfo, sizeof(m_remote_addr));
             std::cout << "new connect from " << inet_ntoa(addrinfo.sin_addr) << ":" << ntohs(addrinfo.sin_port) << std::endl;

@@ -17,6 +17,7 @@ public:
     ssize_t recv(char* buf, size_t len);
     void update();
     inline void log(bool on) { m_logging = on; }
+    bool wait_remote();
 
 protected:
     void create_kcp();
