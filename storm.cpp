@@ -62,6 +62,7 @@ int storm::accept_session(const char* host, int port)
     ::bind(m_sockfd, (const sockaddr*)&addr_info, sizeof(addr_info));
 
     create_kcp();
+    m_kcp->snd_nxt = 1000000;
     return 0;
 }
 
