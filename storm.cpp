@@ -103,8 +103,7 @@ bool storm::wait_remote()
 void storm::update()
 {
     static int cumulative_time = 0;
-    std::chrono::time_point<std::chrono::steady_clock> now = std::chrono::steady_clock().now();
-    int time_now = std::chrono::time_point_cast<std::chrono::milliseconds>(now).time_since_epoch().count();
+    int time_now = m_timer.now();
     if (time_now > m_last_update_t + 10)
     {
         cumulative_time += time_now - m_last_update_t;

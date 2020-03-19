@@ -1,8 +1,7 @@
 #pragma once
 #include "util.h"
 #include "ikcp.h"
-
-#include <chrono>
+#include "timer.h"
 
 class storm
 {
@@ -33,4 +32,5 @@ private:
     socket_t m_sockfd;
     sockaddr_in m_remote_addr;
     bool m_logging;
+    timer m_timer;
 };
