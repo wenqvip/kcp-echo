@@ -105,14 +105,15 @@ void storm::update()
     static int cumulative_time = 0;
     std::chrono::time_point<std::chrono::steady_clock> now = std::chrono::steady_clock().now();
     int time_now = std::chrono::time_point_cast<std::chrono::milliseconds>(now).time_since_epoch().count();
-    cumulative_time += time_now - m_last_update_t;
-    if (!wait_remote() && cumulative_time > 10000)
-    {
-        cumulative_time = 0;
-        ikcp_send(m_kcp, nullptr, 0);
-    }
     if (time_now > m_last_update_t + 10)
     {
+        cumulative_time += time_now - m_last_update_t;
+        if (!wait_remote() && cumulative_time > 10000)
+        {
+            cumulative_time = 0;
+            ikcp_send(m_kcp, nullptr, 0);
+        }
+
         ikcp_update(m_kcp, time_now);
         m_last_update_t = time_now;
     }
