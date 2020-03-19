@@ -104,23 +104,20 @@ void storm::update()
 {
     static int cumulative_time = 0;
     int time_now = m_timer.now();
-    if (time_now > m_last_update_t + 10)
+    cumulative_time += time_now - m_last_update_t;
+    if (!wait_remote() && cumulative_time > 10000)
     {
-        cumulative_time += time_now - m_last_update_t;
-        if (!wait_remote() && cumulative_time > 10000)
-        {
-            cumulative_time = 0;
-            ikcp_send(m_kcp, nullptr, 0);
-        }
-
-        ikcp_update(m_kcp, time_now);
-        m_last_update_t = time_now;
+        cumulative_time = 0;
+        ikcp_send(m_kcp, nullptr, 0);
     }
 
-    char buf[1472] = {0};
+    ikcp_update(m_kcp, time_now);
+    m_last_update_t = time_now;
+
+    char buf[4096] = {0};
     sockaddr_in addrinfo;
     socklen_t len = sizeof(addrinfo);
-    ssize_t count = ::recvfrom(m_sockfd, buf, 1472, 0, (sockaddr*)&addrinfo, &len);
+    ssize_t count = ::recvfrom(m_sockfd, buf, 4096, 0, (sockaddr*)&addrinfo, &len);
 
     if (count > 0)
     {

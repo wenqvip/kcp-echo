@@ -109,6 +109,8 @@ int main(int argc, const char* argv[])
                 std::cout << "error when recv: " << count << std::endl;
             }
         }
+        using namespace std::chrono_literals;
+        std::this_thread::sleep_for(10ms);
     } while (true);
 
     return 0;
