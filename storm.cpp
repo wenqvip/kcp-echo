@@ -46,6 +46,7 @@ int storm::create_session(const char* host, int port)
     m_remote_addr.sin_port = htons(port);
 
     create_kcp();
+    m_kcp->rcv_nxt = 1000000;
     return send(nullptr, 0);
 }
 
