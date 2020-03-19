@@ -21,6 +21,7 @@ public:
 protected:
     void create_kcp();
     static int udp_output(const char* buf, int len, ikcpcb* kcp, void* user);
+    static void log_callback(const char* log, struct IKCPCB* kcp, void* user);
     bool set_socket_blocking(int fd, bool blocking);
     void log(const char* prefix, const char* buf, size_t len);
 

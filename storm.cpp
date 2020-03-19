@@ -69,14 +69,16 @@ void storm::create_kcp()
 {
     m_kcp = ikcp_create(0xCBCBCBCB, this);
     m_kcp->output = storm::udp_output;
+    m_kcp->logmask = 0xFFFF;
+    m_kcp->writelog = log_callback;
+    m_kcp->rcv_wnd = 4096;
+    m_kcp->snd_wnd = 4096;
     ikcp_setmtu(m_kcp, 1472);
-    ikcp_nodelay(m_kcp, 1, 10, 2, 1);
+    //ikcp_nodelay(m_kcp, 1, 10, 2, 1);
 }
 
 size_t storm::send(const char* buf, size_t len)
 {
-    if (m_logging)
-        log("send ", buf, len);
     int ret = ikcp_send(m_kcp, buf, len);
     if (ret < 0)
         std::cout << "sending error" << std::endl;
@@ -120,8 +122,6 @@ void storm::update()
 
         if (addrinfo.sin_addr.s_addr == m_remote_addr.sin_addr.s_addr)
         {
-            if (m_logging)
-                log("receive ", buf, len);
             m_can_read = true;
             ikcp_input(m_kcp, buf, count);
         }
@@ -139,12 +139,15 @@ void storm::update()
 int storm::udp_output(const char* buf, int len, ikcpcb* kcp, void* user)
 {
     storm* pstorm = (storm*)user;
-    if (pstorm->m_logging)
-        pstorm->log("use udp send ", buf, len);
     ssize_t ret = ::sendto(pstorm->m_sockfd, buf, len, 0, (const sockaddr*)&(pstorm->m_remote_addr), sizeof(sockaddr_in));
     if (ret <= 0)
         std::cout << "sending error" << std::endl;
     return ret;
+}
+
+void storm::log_callback(const char* log, struct IKCPCB* kcp, void* user)
+{
+    std::cout << log << std::endl;
 }
 
 bool storm::set_socket_blocking(int fd, bool blocking)
