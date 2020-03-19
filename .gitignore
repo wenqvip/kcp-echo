@@ -5,3 +5,4 @@ storm
 .vs
 vsproject/x64
 vsproject/*.user
+build
