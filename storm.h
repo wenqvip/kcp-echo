@@ -25,6 +25,8 @@ protected:
     bool set_socket_blocking(int fd, bool blocking);
     void log(const char* prefix, const char* buf, size_t len);
 
+    static const int MTU = 1500;
+
 private:
     ikcpcb* m_kcp;
     long m_last_update_t;

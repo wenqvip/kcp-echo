@@ -73,9 +73,7 @@ void storm::create_kcp()
     m_kcp->output = storm::udp_output;
     m_kcp->logmask = 0xFFFF;
     m_kcp->writelog = log_callback;
-    m_kcp->rcv_wnd = 4096;
-    m_kcp->snd_wnd = 4096;
-    ikcp_setmtu(m_kcp, 1472);
+    ikcp_setmtu(m_kcp, MTU);
     //ikcp_nodelay(m_kcp, 1, 10, 2, 1);
 }
 
@@ -116,10 +114,10 @@ void storm::update()
     ikcp_update(m_kcp, time_now);
     m_last_update_t = time_now;
 
-    char buf[4096] = {0};
+    char buf[MTU] = {0};
     sockaddr_in addrinfo;
     socklen_t len = sizeof(addrinfo);
-    ssize_t count = ::recvfrom(m_sockfd, buf, 4096, 0, (sockaddr*)&addrinfo, &len);
+    ssize_t count = ::recvfrom(m_sockfd, buf, MTU, 0, (sockaddr*)&addrinfo, &len);
 
     if (count > 0)
     {

@@ -354,6 +354,7 @@ void ikcp_setoutput(ikcpcb *kcp, int (*output)(const char *buf, int len,
 
 //---------------------------------------------------------------------
 // user/upper level recv: returns size, returns below zero for EAGAIN
+// 收取一整个包，如果包分片了，总字节数可能超过MTU
 //---------------------------------------------------------------------
 int ikcp_recv(ikcpcb *kcp, char *buffer, int len)
 {
@@ -448,10 +449,14 @@ int ikcp_peeksize(const ikcpcb *kcp)
 
 	if (iqueue_is_empty(&kcp->rcv_queue)) return -1;
 
+	//IKCPSEG是一个kcp包
 	seg = iqueue_entry(kcp->rcv_queue.next, IKCPSEG, node);
-	if (seg->frg == 0) return seg->len;
 
-	if (kcp->nrcv_que < seg->frg + 1) return -1;
+	//frg是分片标号（倒数的，比如一共分5片，第一片是4，依次3，2，1，0）
+	if (seg->frg == 0) return seg->len;//如果未分片，则当前包的size就是总size
+
+	//nrcv_que表示接收队列的大小
+	if (kcp->nrcv_que < seg->frg + 1) return -1;//如果分片了，且分片还未全部收到，则返回-1等待
 
 	for (p = kcp->rcv_queue.next; p != &kcp->rcv_queue; p = p->next) {
 		seg = iqueue_entry(p, IKCPSEG, node);
@@ -477,10 +482,14 @@ int ikcp_send(ikcpcb *kcp, const char *buffer, int len)
 	// append to previous segment in streaming mode (if possible)
 	if (kcp->stream != 0) {
 		if (!iqueue_is_empty(&kcp->snd_queue)) {
+			//snd_queue是个循环队列，next指向第一个，prev指向最后一个，这里先得到最后一个包，如果有的话
 			IKCPSEG *old = iqueue_entry(kcp->snd_queue.prev, IKCPSEG, node);
+
+			//mss最大报文长度
 			if (old->len < kcp->mss) {
 				int capacity = kcp->mss - old->len;
 				int extend = (len < capacity)? len : capacity;
+				//new一个新包准备取代old
 				seg = ikcp_segment_new(kcp, old->len + extend);
 				assert(seg);
 				if (seg == NULL) {
@@ -493,7 +502,7 @@ int ikcp_send(ikcpcb *kcp, const char *buffer, int len)
 					buffer += extend;
 				}
 				seg->len = old->len + extend;
-				seg->frg = 0;
+				seg->frg = 0;//在stream模式下，frg永远是0
 				len -= extend;
 				iqueue_del_init(&old->node);
 				ikcp_segment_delete(kcp, old);
@@ -963,8 +972,8 @@ void ikcp_flush(ikcpcb *kcp)
 		}
 		ikcp_ack_get(kcp, i, &seg.sn, &seg.ts);
 		ptr = ikcp_encode_seg(ptr, &seg);
-		if (ikcp_canlog(kcp, IKCP_LOG_SEND)) {
-			ikcp_log(kcp, IKCP_LOG_SEND, "output ack sn=%lu", (unsigned long)seg.sn);
+		if (ikcp_canlog(kcp, IKCP_LOG_OUT_ACK)) {
+			ikcp_log(kcp, IKCP_LOG_OUT_ACK, "output ack sn=%lu", (unsigned long)seg.sn);
 		}
 	}
 
