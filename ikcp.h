@@ -293,10 +293,14 @@ struct IKCPCB
 	IUINT32 ts_recent, ts_lastack, ssthresh;
 	IINT32 rx_rttval, rx_srtt, rx_rto, rx_minrto;
 	IUINT32 snd_wnd, rcv_wnd, rmt_wnd, cwnd, probe;
-	IUINT32 current, interval, ts_flush, xmit;
+	IUINT32 current;//当前时间
+	IUINT32 interval;//发包最小间隔
+	IUINT32 ts_flush;//下次flush的时间
+	IUINT32 xmit;
 	IUINT32 nrcv_buf, nsnd_buf;
 	IUINT32 nrcv_que, nsnd_que;
-	IUINT32 nodelay, updated;
+	IUINT32 nodelay;
+	IUINT32 updated;//是否调用过update
 	IUINT32 ts_probe, probe_wait;
 	IUINT32 dead_link, incr;
 	struct IQUEUEHEAD snd_queue;

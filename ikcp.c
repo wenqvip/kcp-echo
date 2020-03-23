@@ -133,6 +133,9 @@ static inline IUINT32 _ibound_(IUINT32 lower, IUINT32 middle, IUINT32 upper)
 	return _imin_(_imax_(lower, middle), upper);
 }
 
+//---------------------------------------------------------------------
+// 计算时间差
+//---------------------------------------------------------------------
 static inline long _itimediff(IUINT32 later, IUINT32 earlier) 
 {
 	return ((IINT32)(later - earlier));
@@ -911,6 +914,7 @@ int ikcp_input(ikcpcb *kcp, const char *data, long size)
 
 //---------------------------------------------------------------------
 // ikcp_encode_seg
+// 将一个包头部信息写入ptr
 //---------------------------------------------------------------------
 static char *ikcp_encode_seg(char *ptr, const IKCPSEG *seg)
 {
@@ -1152,6 +1156,7 @@ void ikcp_flush(ikcpcb *kcp)
 // update state (call it repeatedly, every 10ms-100ms), or you can ask 
 // ikcp_check when to call it again (without ikcp_input/_send calling).
 // 'current' - current timestamp in millisec. 
+// current -- 时钟（毫秒）
 //---------------------------------------------------------------------
 void ikcp_update(ikcpcb *kcp, IUINT32 current)
 {
@@ -1161,7 +1166,7 @@ void ikcp_update(ikcpcb *kcp, IUINT32 current)
 
 	if (kcp->updated == 0) {
 		kcp->updated = 1;
-		kcp->ts_flush = kcp->current;
+		kcp->ts_flush = kcp->current;//如果是第一次运行update，那么下次flush时间显示就是current
 	}
 
 	slap = _itimediff(kcp->current, kcp->ts_flush);
@@ -1172,7 +1177,9 @@ void ikcp_update(ikcpcb *kcp, IUINT32 current)
 	}
 
 	if (slap >= 0) {
-		kcp->ts_flush += kcp->interval;
+		kcp->ts_flush += kcp->interval;//下次flush时间在interval毫秒以后（可能有误差）
+
+		//如果出现很大的延迟的情况下，保证下次flush还是在interval毫秒以后
 		if (_itimediff(kcp->current, kcp->ts_flush) >= 0) {
 			kcp->ts_flush = kcp->current + kcp->interval;
 		}
@@ -1207,15 +1214,18 @@ IUINT32 ikcp_check(const ikcpcb *kcp, IUINT32 current)
 		ts_flush = current;
 	}
 
+	//如果current已经>=ts_flush那么当前时间就是需要call update的时候
 	if (_itimediff(current, ts_flush) >= 0) {
 		return current;
 	}
 
 	tm_flush = _itimediff(ts_flush, current);
 
+	//遍历发送队列，看看是否有需要resend的包
 	for (p = kcp->snd_buf.next; p != &kcp->snd_buf; p = p->next) {
 		const IKCPSEG *seg = iqueue_entry(p, const IKCPSEG, node);
 		IINT32 diff = _itimediff(seg->resendts, current);
+		//如果发送队列里面有需要resend的包，那么返回当前时间
 		if (diff <= 0) {
 			return current;
 		}
