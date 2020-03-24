@@ -488,7 +488,7 @@ int ikcp_send(ikcpcb *kcp, const char *buffer, int len)
 			//snd_queue是个循环队列，next指向第一个，prev指向最后一个，这里先得到最后一个包，如果有的话
 			IKCPSEG *old = iqueue_entry(kcp->snd_queue.prev, IKCPSEG, node);
 
-			//mss最大报文长度
+			//mss最大报文长度，如果最后一个包的剩余mss足够，那么两包合一包
 			if (old->len < kcp->mss) {
 				int capacity = kcp->mss - old->len;
 				int extend = (len < capacity)? len : capacity;
@@ -534,6 +534,7 @@ int ikcp_send(ikcpcb *kcp, const char *buffer, int len)
 		if (buffer && len > 0) {
 			memcpy(seg->data, buffer, size);
 		}
+		//注意没有对新包的包头信息进行过多设置，很多信息是从snd_queue进入snd_buf时才设置的
 		seg->len = size;
 		seg->frg = (kcp->stream == 0)? (count - i - 1) : 0;
 		iqueue_init(&seg->node);
@@ -837,7 +838,7 @@ int ikcp_input(ikcpcb *kcp, const char *data, long size)
 					"input psh: sn=%lu ts=%lu", (unsigned long)sn, (unsigned long)ts);
 			}
 			if (_itimediff(sn, kcp->rcv_nxt + kcp->rcv_wnd) < 0) {
-				ikcp_ack_push(kcp, sn, ts);
+				ikcp_ack_push(kcp, sn, ts);//特意把每个包的ts保存了起来，发送ack时要把ts发回到remote，ts表示remote发送这个包时的时间
 				if (_itimediff(sn, kcp->rcv_nxt) >= 0) {
 					seg = ikcp_segment_new(kcp, len);
 					seg->conv = conv;
@@ -963,7 +964,7 @@ void ikcp_flush(ikcpcb *kcp)
 	seg.conv = kcp->conv;
 	seg.cmd = IKCP_CMD_ACK;
 	seg.frg = 0;
-	seg.wnd = ikcp_wnd_unused(kcp);//ack包同时告诉对方接收窗口多大
+	seg.wnd = ikcp_wnd_unused(kcp);//每个包头都有自己接收窗口大小的信息
 	seg.una = kcp->rcv_nxt;//rcv_nxt下一个希望接收的包的序号
 	seg.len = 0;
 	seg.sn = 0;
@@ -973,12 +974,12 @@ void ikcp_flush(ikcpcb *kcp)
 	count = kcp->ackcount;
 	for (i = 0; i < count; i++) {
 		size = (int)(ptr - buffer);
-		if (size + (int)IKCP_OVERHEAD > (int)kcp->mtu) {
-			ikcp_output(kcp, buffer, size);
+		if (size + (int)IKCP_OVERHEAD > (int)kcp->mtu) {//当size大小几乎填满mtu时，就调用底层接口发送出去
+			ikcp_output(kcp, buffer, size);//有多少个ack就发多少个，并不节约bytes
 			ptr = buffer;
 		}
-		ikcp_ack_get(kcp, i, &seg.sn, &seg.ts);
-		ptr = ikcp_encode_seg(ptr, &seg);
+		ikcp_ack_get(kcp, i, &seg.sn, &seg.ts);//特意将每个ack对应的包的发送时间ts设置好，发送给remote,remote据此计算延迟，超时重传等
+		ptr = ikcp_encode_seg(ptr, &seg);//这里将seg头部写入了buffer
 		if (ikcp_canlog(kcp, IKCP_LOG_OUT_ACK)) {
 			ikcp_log(kcp, IKCP_LOG_OUT_ACK, "output ack sn=%lu", (unsigned long)seg.sn);
 		}
@@ -1010,17 +1011,18 @@ void ikcp_flush(ikcpcb *kcp)
 
 	// flush window probing commands
 	if (kcp->probe & IKCP_ASK_SEND) {
-		seg.cmd = IKCP_CMD_WASK;
+		seg.cmd = IKCP_CMD_WASK;//此前seg已写入buffer，所以此时可以直接把cmd改了
 		size = (int)(ptr - buffer);
 		if (size + (int)IKCP_OVERHEAD > (int)kcp->mtu) {
 			ikcp_output(kcp, buffer, size);
 			ptr = buffer;
 		}
-		ptr = ikcp_encode_seg(ptr, &seg);
+		ptr = ikcp_encode_seg(ptr, &seg);//将这个probe wnd的seg也写入buffer
 	}
 
 	// flush window probing commands
-	if (kcp->probe & IKCP_ASK_TELL) {
+	if (kcp->probe & IKCP_ASK_TELL) {//如果对方发来一个IKCP_CMD_WASK包，那么己方会设置这个标志以便发送一个IKCP_CMD_WINS
+		//然而是否有必要？因为每个包里都含有接收窗口大小的信息
 		seg.cmd = IKCP_CMD_WINS;
 		size = (int)(ptr - buffer);
 		if (size + (int)IKCP_OVERHEAD > (int)kcp->mtu) {
@@ -1051,7 +1053,7 @@ void ikcp_flush(ikcpcb *kcp)
 		newseg->conv = kcp->conv;
 		newseg->cmd = IKCP_CMD_PUSH;
 		newseg->wnd = seg.wnd;
-		newseg->ts = current;
+		newseg->ts = current;//设置ts
 		newseg->sn = kcp->snd_nxt++;
 		newseg->una = kcp->rcv_nxt;
 		newseg->resendts = current;
