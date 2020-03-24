@@ -93,6 +93,7 @@ int main(int argc, const char* argv[])
             ssize_t count = stm.recv(buf, 4096);
             if (count > 0) {
                 stm.send(buf, count);
+                stm.flush();
             }
             else if (count < -1) {
                 std::cout << "error when recv: " << count << std::endl;

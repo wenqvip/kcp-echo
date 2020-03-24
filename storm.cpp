@@ -84,6 +84,11 @@ size_t storm::send(const char* buf, size_t len)
     return ret;
 }
 
+void storm::flush()
+{
+    ikcp_flush(m_kcp);
+}
+
 bool storm::can_read()
 {
     return m_can_read;
