@@ -1,5 +1,6 @@
 #include "util.h"
 #include "storm.h"
+#include "timer.h"
 
 #include <iostream>
 #include <functional>
@@ -100,18 +101,6 @@ bool storm::wait_remote()
 
 void storm::update()
 {
-    static int cumulative_time = 0;
-    int time_now = m_timer.now();
-    cumulative_time += time_now - m_last_update_t;
-    if (!wait_remote() && cumulative_time > 10000)
-    {
-        cumulative_time = 0;
-        ikcp_send(m_kcp, nullptr, 0);
-    }
-
-    ikcp_update(m_kcp, time_now);
-    m_last_update_t = time_now;
-
     char buf[MTU] = {0};
     sockaddr_in addrinfo;
     socklen_t len = sizeof(addrinfo);
@@ -140,6 +129,19 @@ void storm::update()
             std::cout << "error " << error << " occurs when call recvfrom" << std::endl;
 #endif
     }
+
+    static int cumulative_time = 0;
+    int time_now = timer::now();
+    cumulative_time += time_now - m_last_update_t;
+    //发送心跳包，不发心跳包处于NAT后的端过段时间就无法连上了
+    if (!wait_remote() && cumulative_time > 10000)
+    {
+        cumulative_time = 0;
+        ikcp_send(m_kcp, nullptr, 0);
+    }
+
+    ikcp_update(m_kcp, time_now);
+    m_last_update_t = time_now;
 }
 
 int storm::udp_output(const char* buf, int len, ikcpcb* kcp, void* user)

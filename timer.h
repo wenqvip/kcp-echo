@@ -4,6 +4,10 @@ class timer
 	long m_begin_t;
 public:
 	timer();
-	long now();
+	timer(const timer&) = delete;
+	timer& operator= (const timer&) = delete;
+
+	static long now();
+	static timer s_timer;
 };
 

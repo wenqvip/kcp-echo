@@ -2,6 +2,7 @@
 #include "ikcp.h"
 #include "argparse.hpp"
 #include "storm.h"
+#include "timer.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,6 +11,7 @@
 #include <iostream>
 #include <thread>
 #include <mutex>
+#include <chrono>
 
 int main(int argc, const char* argv[])
 {
@@ -80,6 +82,7 @@ int main(int argc, const char* argv[])
 
     std::stringstream ss;
     do {
+        auto frame_begin_t = timer::now();
         {
             std::lock_guard<std::mutex> guard(_mutex);
             stm.update();
@@ -109,8 +112,12 @@ int main(int argc, const char* argv[])
                 std::cout << "error when recv: " << count << std::endl;
             }
         }
+        auto frame_end_t = timer::now();
+        std::chrono::duration<long, std::milli> du(frame_end_t - frame_begin_t);
         using namespace std::chrono_literals;
-        std::this_thread::sleep_for(10ms);
+        auto left = 10ms - du;
+        if (left.count() > 0)
+            std::this_thread::sleep_for(left);
     } while (true);
 
     return 0;
