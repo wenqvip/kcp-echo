@@ -289,26 +289,31 @@ struct IKCPSEG
 struct IKCPCB
 {
 	IUINT32 conv, mtu, mss, state;
-	IUINT32 snd_una, snd_nxt, rcv_nxt;
+	IUINT32 snd_una;
+	IUINT32 snd_nxt;
+	IUINT32 rcv_nxt;//已经被上层协议接收的包的序号+1
 	IUINT32 ts_recent, ts_lastack, ssthresh;
 	IINT32 rx_rttval, rx_srtt, rx_rto, rx_minrto;
-	IUINT32 snd_wnd, rcv_wnd, rmt_wnd, cwnd, probe;
+	IUINT32 snd_wnd;//发送窗口大小
+	IUINT32 rcv_wnd;//接收窗口大小
+	IUINT32 rmt_wnd, cwnd, probe;
 	IUINT32 current;//当前时间
 	IUINT32 interval;//发包最小间隔
 	IUINT32 ts_flush;//下次flush的时间
 	IUINT32 xmit;
 	IUINT32 nrcv_buf, nsnd_buf;
-	IUINT32 nrcv_que, nsnd_que;
+	IUINT32 nrcv_que;//接收队列大小
+	IUINT32 nsnd_que;//发送队列大小
 	IUINT32 nodelay;
 	IUINT32 updated;//是否调用过update
 	IUINT32 ts_probe, probe_wait;
 	IUINT32 dead_link, incr;
-	struct IQUEUEHEAD snd_queue;
-	struct IQUEUEHEAD rcv_queue;
-	struct IQUEUEHEAD snd_buf;
-	struct IQUEUEHEAD rcv_buf;
-	IUINT32 *acklist;
-	IUINT32 ackcount;
+	struct IQUEUEHEAD snd_queue;//发送队列，储存将要发送的包
+	struct IQUEUEHEAD rcv_queue;//接收队列，储存已经ACK的包？
+	struct IQUEUEHEAD snd_buf;//发送缓存
+	struct IQUEUEHEAD rcv_buf;//接收缓存
+	IUINT32 *acklist;//保存需要向对方ack的序号及时间
+	IUINT32 ackcount;//acklist的count
 	IUINT32 ackblock;
 	void *user;
 	char *buffer;

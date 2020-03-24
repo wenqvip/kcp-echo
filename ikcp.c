@@ -929,6 +929,9 @@ static char *ikcp_encode_seg(char *ptr, const IKCPSEG *seg)
 	return ptr;
 }
 
+//---------------------------------------------------------------------
+// 返回可用窗口大小
+//---------------------------------------------------------------------
 static int ikcp_wnd_unused(const ikcpcb *kcp)
 {
 	if (kcp->nrcv_que < kcp->rcv_wnd) {
@@ -960,8 +963,8 @@ void ikcp_flush(ikcpcb *kcp)
 	seg.conv = kcp->conv;
 	seg.cmd = IKCP_CMD_ACK;
 	seg.frg = 0;
-	seg.wnd = ikcp_wnd_unused(kcp);
-	seg.una = kcp->rcv_nxt;
+	seg.wnd = ikcp_wnd_unused(kcp);//ack包同时告诉对方接收窗口多大
+	seg.una = kcp->rcv_nxt;//rcv_nxt下一个希望接收的包的序号
 	seg.len = 0;
 	seg.sn = 0;
 	seg.ts = 0;
