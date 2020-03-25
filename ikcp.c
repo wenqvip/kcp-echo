@@ -976,7 +976,7 @@ void ikcp_flush(ikcpcb *kcp)
 	for (i = 0; i < count; i++) {
 		size = (int)(ptr - buffer);
 		if (size + (int)IKCP_OVERHEAD > (int)kcp->mtu) {//当size大小几乎填满mtu时，就调用底层接口发送出去
-			ikcp_output(kcp, buffer, size);//有多少个ack就发多少个，并不节约bytes
+			ikcp_output(kcp, buffer, size);//有多少个ack就发多少个，不节约bytes
 			ptr = buffer;
 		}
 		ikcp_ack_get(kcp, i, &seg.sn, &seg.ts);//特意将每个ack对应的包的发送时间ts设置好，发送给remote,remote据此计算延迟，超时重传等
@@ -1077,14 +1077,14 @@ void ikcp_flush(ikcpcb *kcp)
 			segment->rto = kcp->rx_rto;
 			segment->resendts = current + segment->rto + rtomin;
 		}
-		else if (_itimediff(current, segment->resendts) >= 0) {
+		else if (_itimediff(current, segment->resendts) >= 0) {//发生了超时重传
 			needsend = 1;
 			segment->xmit++;
 			kcp->xmit++;
 			if (kcp->nodelay == 0) {
-				segment->rto += kcp->rx_rto;
+				segment->rto += kcp->rx_rto;//非nodelay情况下rto按2倍增长
 			}	else {
-				segment->rto += kcp->rx_rto / 2;
+				segment->rto += kcp->rx_rto / 2;//这里很难理解，并不是作者说的按1.5倍增长那么简单，有人觉得这里有bug，但作者也许有其道理
 			}
 			segment->resendts = current + segment->rto;
 			lost = 1;
@@ -1109,19 +1109,20 @@ void ikcp_flush(ikcpcb *kcp)
 			size = (int)(ptr - buffer);
 			need = IKCP_OVERHEAD + segment->len;
 
+			//当前包放不下了，就先把当前包发出去
 			if (size + need > (int)kcp->mtu) {
 				ikcp_output(kcp, buffer, size);
 				ptr = buffer;
 			}
 
-			ptr = ikcp_encode_seg(ptr, segment);
+			ptr = ikcp_encode_seg(ptr, segment);//新包
 
 			if (segment->len > 0) {
 				memcpy(ptr, segment->data, segment->len);
 				ptr += segment->len;
 			}
 
-			if (segment->xmit >= kcp->dead_link) {
+			if (segment->xmit >= kcp->dead_link) {//超过dead_link，认为连接已断开
 				kcp->state = (IUINT32)-1;
 			}
 		}

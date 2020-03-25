@@ -275,8 +275,8 @@ struct IKCPSEG
 	IUINT32 sn;//包序号
 	IUINT32 una;//确认序号
 	IUINT32 len;//数据长度
-	IUINT32 resendts;//超时重传时间
-	IUINT32 rto;
+	IUINT32 resendts;//超时重传具体时间
+	IUINT32 rto;//
 	IUINT32 fastack;
 	IUINT32 xmit;
 	char data[1];
@@ -294,7 +294,7 @@ struct IKCPCB
 	IUINT32 rcv_nxt;//已经被上层协议接收的包的序号+1
 	IUINT32 ts_recent, ts_lastack, ssthresh;
 	IINT32 rx_rttval;
-	IINT32 rx_srtt;//round trip time 最近8次数据包往返时间平均值
+	IINT32 rx_srtt;//round trip time 平滑的rtt
 	IINT32 rx_rto;//Retransmission timeout 超时重传时间
 	IINT32 rx_minrto;//最小rto
 	IUINT32 snd_wnd;//发送窗口大小
@@ -313,7 +313,8 @@ struct IKCPCB
 	IUINT32 nodelay;//是否nodelay
 	IUINT32 updated;//是否调用过update
 	IUINT32 ts_probe, probe_wait;
-	IUINT32 dead_link, incr;
+	IUINT32 dead_link;
+	IUINT32 incr;
 	struct IQUEUEHEAD snd_queue;//发送队列，储存将要发送的包
 	struct IQUEUEHEAD rcv_queue;//接收队列，储存已经ACK的包？
 	struct IQUEUEHEAD snd_buf;//发送缓存
