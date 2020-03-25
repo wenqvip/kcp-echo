@@ -269,12 +269,12 @@ struct IKCPSEG
 	struct IQUEUEHEAD node;
 	IUINT32 conv;
 	IUINT32 cmd;
-	IUINT32 frg;
-	IUINT32 wnd;
-	IUINT32 ts;
-	IUINT32 sn;
-	IUINT32 una;
-	IUINT32 len;
+	IUINT32 frg;//是否分片
+	IUINT32 wnd;//接收窗口大小
+	IUINT32 ts;//此包发送时间
+	IUINT32 sn;//包序号
+	IUINT32 una;//确认序号
+	IUINT32 len;//数据长度
 	IUINT32 resendts;//超时重传时间
 	IUINT32 rto;
 	IUINT32 fastack;
@@ -293,7 +293,10 @@ struct IKCPCB
 	IUINT32 snd_nxt;//已经进入发送缓存的包的序号+1
 	IUINT32 rcv_nxt;//已经被上层协议接收的包的序号+1
 	IUINT32 ts_recent, ts_lastack, ssthresh;
-	IINT32 rx_rttval, rx_srtt, rx_rto, rx_minrto;
+	IINT32 rx_rttval;
+	IINT32 rx_srtt;//round trip time 最近8次数据包往返时间平均值
+	IINT32 rx_rto;//Retransmission timeout 超时重传时间
+	IINT32 rx_minrto;//最小rto
 	IUINT32 snd_wnd;//发送窗口大小
 	IUINT32 rcv_wnd;//接收窗口大小
 	IUINT32 rmt_wnd;//remote接收窗口大小

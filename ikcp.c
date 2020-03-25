@@ -552,6 +552,7 @@ int ikcp_send(ikcpcb *kcp, const char *buffer, int len)
 
 //---------------------------------------------------------------------
 // parse ack
+// 计算超时重传时间
 //---------------------------------------------------------------------
 static void ikcp_update_ack(ikcpcb *kcp, IINT32 rtt)
 {
