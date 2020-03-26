@@ -278,7 +278,7 @@ struct IKCPSEG
 	IUINT32 resendts;//超时重传具体时间
 	IUINT32 rto;//
 	IUINT32 fastack;
-	IUINT32 xmit;
+	IUINT32 xmit;//此包发送次数
 	char data[1];
 };
 
@@ -288,11 +288,13 @@ struct IKCPSEG
 //---------------------------------------------------------------------
 struct IKCPCB
 {
-	IUINT32 conv, mtu, mss, state;
+	IUINT32 conv, mtu, mss;
+	IUINT32 state;//0表示正常，-1表示断开
 	IUINT32 snd_una;//待确认的包序号
 	IUINT32 snd_nxt;//已经进入发送缓存的包的序号+1
 	IUINT32 rcv_nxt;//已经被上层协议接收的包的序号+1
-	IUINT32 ts_recent, ts_lastack, ssthresh;
+	IUINT32 ts_recent, ts_lastack;
+	IUINT32 ssthresh;//拥塞窗口阈值，在此之前发送窗口按1递增，在此之后增速递减
 	IINT32 rx_rttval;
 	IINT32 rx_srtt;//round trip time 平滑的rtt
 	IINT32 rx_rto;//Retransmission timeout 超时重传时间
@@ -305,7 +307,7 @@ struct IKCPCB
 	IUINT32 current;//当前时间
 	IUINT32 interval;//发包最小间隔
 	IUINT32 ts_flush;//下次flush的时间
-	IUINT32 xmit;
+	IUINT32 xmit;//发生超时重传的次数
 	IUINT32 nrcv_buf;
 	IUINT32 nsnd_buf;
 	IUINT32 nrcv_que;//接收队列大小
@@ -313,8 +315,8 @@ struct IKCPCB
 	IUINT32 nodelay;//是否nodelay
 	IUINT32 updated;//是否调用过update
 	IUINT32 ts_probe, probe_wait;
-	IUINT32 dead_link;
-	IUINT32 incr;
+	IUINT32 dead_link;//超过dead_link则连接已断开
+	IUINT32 incr;//达到拥塞阈值后与发送窗口增速有关的值
 	struct IQUEUEHEAD snd_queue;//发送队列，储存将要发送的包
 	struct IQUEUEHEAD rcv_queue;//接收队列，储存已经ACK的包？
 	struct IQUEUEHEAD snd_buf;//发送缓存
@@ -330,7 +332,7 @@ struct IKCPCB
 	IUINT32 ackblock;
 	void *user;
 	char *buffer;
-	int fastresend;//是否快速重传
+	int fastresend;//快速重传阈值，如果0则没有快速重传
 	int fastlimit;
 	int nocwnd;//0:normal congestion control(default), 1:disable congestion control
 	int stream;

@@ -571,6 +571,9 @@ static void ikcp_update_ack(ikcpcb *kcp, IINT32 rtt)
 	kcp->rx_rto = _ibound_(kcp->rx_minrto, rto, IKCP_RTO_MAX);
 }
 
+//---------------------------------------------------------------------
+// 更新snd_una，在发送缓存有删除后调用
+//---------------------------------------------------------------------
 static void ikcp_shrink_buf(ikcpcb *kcp)
 {
 	struct IQUEUEHEAD *p = kcp->snd_buf.next;
@@ -582,10 +585,14 @@ static void ikcp_shrink_buf(ikcpcb *kcp)
 	}
 }
 
+//---------------------------------------------------------------------
+// 将sn对应的包从发送缓存清除掉
+//---------------------------------------------------------------------
 static void ikcp_parse_ack(ikcpcb *kcp, IUINT32 sn)
 {
 	struct IQUEUEHEAD *p, *next;
 
+	//显然，sn < snd_una说明此包已经确认过了，sn >= snd_nxt说明此包还没有进入发送缓存
 	if (_itimediff(sn, kcp->snd_una) < 0 || _itimediff(sn, kcp->snd_nxt) >= 0)
 		return;
 
@@ -598,12 +605,16 @@ static void ikcp_parse_ack(ikcpcb *kcp, IUINT32 sn)
 			kcp->nsnd_buf--;
 			break;
 		}
+		//由于snd_buf是按sn递增有序的，所以如果满足以下条件可以直接退出循环了
 		if (_itimediff(sn, seg->sn) < 0) {
 			break;
 		}
 	}
 }
 
+//---------------------------------------------------------------------
+// 将发送缓存中小于una的包一律删除，una是remote端已经确认收到的包
+//---------------------------------------------------------------------
 static void ikcp_parse_una(ikcpcb *kcp, IUINT32 una)
 {
 	struct IQUEUEHEAD *p, *next;
@@ -620,22 +631,28 @@ static void ikcp_parse_una(ikcpcb *kcp, IUINT32 una)
 	}
 }
 
+//---------------------------------------------------------------------
+// 大于sn的包一律fastack++
+//---------------------------------------------------------------------
 static void ikcp_parse_fastack(ikcpcb *kcp, IUINT32 sn, IUINT32 ts)
 {
+	//sn是收到的数个ack里面最大的那个sn
 	struct IQUEUEHEAD *p, *next;
 
+	//显然，sn < snd_una说明此包已经确认过了，sn >= snd_nxt说明此包还没有进入发送缓存
 	if (_itimediff(sn, kcp->snd_una) < 0 || _itimediff(sn, kcp->snd_nxt) >= 0)
 		return;
 
 	for (p = kcp->snd_buf.next; p != &kcp->snd_buf; p = next) {
 		IKCPSEG *seg = iqueue_entry(p, IKCPSEG, node);
 		next = p->next;
+		//snd_buf是按sn递增排列的，如果sn<seg->sn，直接break
 		if (_itimediff(sn, seg->sn) < 0) {
 			break;
 		}
 		else if (sn != seg->sn) {
 		#ifndef IKCP_FASTACK_CONSERVE
-			seg->fastack++;
+			seg->fastack++;//在发送缓存里的包都已经经过send了，所以
 		#else
 			if (_itimediff(ts, seg->ts) >= 0)
 				seg->fastack++;
@@ -886,13 +903,13 @@ int ikcp_input(ikcpcb *kcp, const char *data, long size)
 		ikcp_parse_fastack(kcp, maxack, latest_ts);
 	}
 
-	if (_itimediff(kcp->snd_una, prev_una) > 0) {
+	if (_itimediff(kcp->snd_una, prev_una) > 0) {//说明remote成功收到一个或几个包
 		if (kcp->cwnd < kcp->rmt_wnd) {
 			IUINT32 mss = kcp->mss;
 			if (kcp->cwnd < kcp->ssthresh) {
-				kcp->cwnd++;
+				kcp->cwnd++;//未达阈值之前每次发送窗口大小递增1
 				kcp->incr += mss;
-			}	else {
+			}	else {//感觉达到阈值后窗口大小递增越来越小
 				if (kcp->incr < mss) kcp->incr = mss;
 				kcp->incr += (mss * mss) / kcp->incr + (mss / 16);
 				if ((kcp->cwnd + 1) * mss <= kcp->incr) {
@@ -1071,13 +1088,13 @@ void ikcp_flush(ikcpcb *kcp)
 	for (p = kcp->snd_buf.next; p != &kcp->snd_buf; p = p->next) {
 		IKCPSEG *segment = iqueue_entry(p, IKCPSEG, node);
 		int needsend = 0;
-		if (segment->xmit == 0) {
+		if (segment->xmit == 0) {//新进入发送缓存的包走这里
 			needsend = 1;
 			segment->xmit++;
 			segment->rto = kcp->rx_rto;
 			segment->resendts = current + segment->rto + rtomin;
 		}
-		else if (_itimediff(current, segment->resendts) >= 0) {//发生了超时重传
+		else if (_itimediff(current, segment->resendts) >= 0) {//超时重传
 			needsend = 1;
 			segment->xmit++;
 			kcp->xmit++;
@@ -1089,7 +1106,7 @@ void ikcp_flush(ikcpcb *kcp)
 			segment->resendts = current + segment->rto;
 			lost = 1;
 		}
-		else if (segment->fastack >= resent) {
+		else if (segment->fastack >= resent) {//快速重传
 			if ((int)segment->xmit <= kcp->fastlimit || 
 				kcp->fastlimit <= 0) {
 				needsend = 1;
@@ -1135,17 +1152,17 @@ void ikcp_flush(ikcpcb *kcp)
 	}
 
 	// update ssthresh
-	if (change) {
-		IUINT32 inflight = kcp->snd_nxt - kcp->snd_una;
-		kcp->ssthresh = inflight / 2;
+	if (change) {//触发了快速重传
+		IUINT32 inflight = kcp->snd_nxt - kcp->snd_una;//inflight就是正在发送中（等待remote确认）的包的数量
+		kcp->ssthresh = inflight / 2;//拥塞阈值减小
 		if (kcp->ssthresh < IKCP_THRESH_MIN)
 			kcp->ssthresh = IKCP_THRESH_MIN;
 		kcp->cwnd = kcp->ssthresh + resent;
 		kcp->incr = kcp->cwnd * kcp->mss;
 	}
 
-	if (lost) {
-		kcp->ssthresh = cwnd / 2;
+	if (lost) {//触发了超时重传
+		kcp->ssthresh = cwnd / 2;//拥塞阈值减小
 		if (kcp->ssthresh < IKCP_THRESH_MIN)
 			kcp->ssthresh = IKCP_THRESH_MIN;
 		kcp->cwnd = 1;
