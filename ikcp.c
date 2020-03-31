@@ -441,6 +441,7 @@ int ikcp_recv(ikcpcb *kcp, char *buffer, int len)
 
 //---------------------------------------------------------------------
 // peek data size
+// 取回接收队列中第一个包的大小
 //---------------------------------------------------------------------
 int ikcp_peeksize(const ikcpcb *kcp)
 {
@@ -798,7 +799,7 @@ int ikcp_input(ikcpcb *kcp, const char *data, long size)
 		if (size < (int)IKCP_OVERHEAD) break;
 
 		data = ikcp_decode32u(data, &conv);
-		if (conv != kcp->conv) return -1;
+		if (conv != kcp->conv) return -1;//如果conv不一样，说明不是同一个连接，丢弃
 
 		data = ikcp_decode8u(data, &cmd);
 		data = ikcp_decode8u(data, &frg);
@@ -810,13 +811,14 @@ int ikcp_input(ikcpcb *kcp, const char *data, long size)
 
 		size -= IKCP_OVERHEAD;
 
-		if ((long)size < (long)len || (int)len < 0) return -2;
+		if ((long)size < (long)len || (int)len < 0) return -2;//如果包不完整或len小于0，返回错误
+		//所以传给ikcp_input的数据必须是完整的，你不能把从recv读取的一部分数据传入ikcp_input
 
 		if (cmd != IKCP_CMD_PUSH && cmd != IKCP_CMD_ACK &&
 			cmd != IKCP_CMD_WASK && cmd != IKCP_CMD_WINS) 
-			return -3;
+			return -3;//cmd不对，返回错误
 
-		kcp->rmt_wnd = wnd;
+		kcp->rmt_wnd = wnd;//wnd代表remote的wnd
 		ikcp_parse_una(kcp, una);
 		ikcp_shrink_buf(kcp);
 

@@ -99,6 +99,13 @@ ssize_t storm::recv(char* buf, size_t len)
     return ikcp_recv(m_kcp, buf, len);
 }
 
+ssize_t storm::recv(std::string& data)
+{
+    int data_size = ikcp_peeksize(m_kcp);
+    data.resize(data_size);
+    return ikcp_recv(m_kcp, data.data, data_size);
+}
+
 bool storm::wait_remote()
 {
     return m_remote_addr.sin_addr.s_addr == 0;
@@ -106,6 +113,19 @@ bool storm::wait_remote()
 
 void storm::update()
 {
+    static int cumulative_time = 0;
+    int time_now = timer::now();
+    cumulative_time += time_now - m_last_update_t;
+    //发送心跳包，不发心跳包处于NAT后的端过段时间就无法连上了
+    if (!wait_remote() && cumulative_time > 10000)
+    {
+        cumulative_time = 0;
+        ikcp_send(m_kcp, nullptr, 0);
+    }
+
+    ikcp_update(m_kcp, time_now);
+    m_last_update_t = time_now;
+
     char buf[MTU] = {0};
     sockaddr_in addrinfo;
     socklen_t len = sizeof(addrinfo);
@@ -134,19 +154,6 @@ void storm::update()
             std::cout << "error " << error << " occurs when call recvfrom" << std::endl;
 #endif
     }
-
-    static int cumulative_time = 0;
-    int time_now = timer::now();
-    cumulative_time += time_now - m_last_update_t;
-    //发送心跳包，不发心跳包处于NAT后的端过段时间就无法连上了
-    if (!wait_remote() && cumulative_time > 10000)
-    {
-        cumulative_time = 0;
-        ikcp_send(m_kcp, nullptr, 0);
-    }
-
-    ikcp_update(m_kcp, time_now);
-    m_last_update_t = time_now;
 }
 
 int storm::udp_output(const char* buf, int len, ikcpcb* kcp, void* user)

@@ -1,6 +1,7 @@
 #pragma once
 #include "util.h"
 #include "ikcp.h"
+#include <string>
 
 class storm
 {
@@ -13,6 +14,7 @@ public:
     size_t send(const char* buf, size_t len);
     bool can_read();
     ssize_t recv(char* buf, size_t len);
+    ssize_t recv(std::string& data);
     void update();
     void flush();
     inline void log(bool on) { m_logging = on; }

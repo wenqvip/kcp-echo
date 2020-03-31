@@ -57,6 +57,8 @@ int main(int argc, const char* argv[])
     storm stm;
     stm.init();
     stm.log(logging);
+    std::mutex _mutex;
+    std::string input;
     if (server_mode)
     {
         std::cout << "running as server at " << host << ":" << port << std::endl;
@@ -66,19 +68,18 @@ int main(int argc, const char* argv[])
     {
         std::cout << "running as client, remote " << host << ":" << port << std::endl;
         stm.create_session(host.c_str(), port);
-    }
-    std::mutex _mutex;
 
-    std::thread([&]{
-        while (true) {
-            std::string input;
-            std::cin >> input;
-            {
-                std::lock_guard<std::mutex> guard(_mutex);
-                stm.send(input.c_str(), input.size());
+
+        std::thread([&] {
+            while (true) {
+                std::cin >> input;
+                {
+                    std::lock_guard<std::mutex> guard(_mutex);
+                    stm.send(input.c_str(), input.size());
+                }
             }
-        }
-    }).detach();
+            }).detach();
+    }
 
     std::stringstream ss;
     do {
