@@ -103,7 +103,7 @@ ssize_t storm::recv(std::string& data)
 {
     int data_size = ikcp_peeksize(m_kcp);
     data.resize(data_size);
-    return ikcp_recv(m_kcp, data.data, data_size);
+    return ikcp_recv(m_kcp, data.data(), data_size);
 }
 
 bool storm::wait_remote()
