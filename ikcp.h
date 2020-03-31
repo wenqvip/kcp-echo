@@ -272,12 +272,12 @@ struct IKCPSEG
 	IUINT32 frg;//是否分片
 	IUINT32 wnd;//接收窗口大小
 	IUINT32 ts;//此包发送时间
-	IUINT32 sn;//包序号
-	IUINT32 una;//确认序号
+	IUINT32 sn;//如果是push包，代表包序号，如果是ack包，代表确认的包序号
+	IUINT32 una;//此序号以前的包都被确认了
 	IUINT32 len;//数据长度
 	IUINT32 resendts;//超时重传具体时间
-	IUINT32 rto;//
-	IUINT32 fastack;
+	IUINT32 rto;//超时重传延迟时间，从当前时间开始算rto毫秒后重传
+	IUINT32 fastack;//快速重传计数，达到一定计数后触发快速重传
 	IUINT32 xmit;//此包发送次数
 	char data[1];
 };
@@ -308,8 +308,8 @@ struct IKCPCB
 	IUINT32 interval;//发包最小间隔
 	IUINT32 ts_flush;//下次flush的时间
 	IUINT32 xmit;//发生超时重传的次数
-	IUINT32 nrcv_buf;
-	IUINT32 nsnd_buf;
+	IUINT32 nrcv_buf;//接收缓存大小
+	IUINT32 nsnd_buf;//扫送缓存大小
 	IUINT32 nrcv_que;//接收队列大小
 	IUINT32 nsnd_que;//发送队列大小
 	IUINT32 nodelay;//是否nodelay

@@ -719,11 +719,12 @@ void ikcp_parse_data(ikcpcb *kcp, IKCPSEG *newseg)
 	int repeat = 0;
 	
 	if (_itimediff(sn, kcp->rcv_nxt + kcp->rcv_wnd) >= 0 ||
-		_itimediff(sn, kcp->rcv_nxt) < 0) {
+		_itimediff(sn, kcp->rcv_nxt) < 0) {//此包不在接收窗口内就删除掉
 		ikcp_segment_delete(kcp, newseg);
 		return;
 	}
 
+	//从后往前遍历接收缓存，找到插入位置，要保持接收缓存按序号从小到大排列
 	for (p = kcp->rcv_buf.prev; p != &kcp->rcv_buf; p = prev) {
 		IKCPSEG *seg = iqueue_entry(p, IKCPSEG, node);
 		prev = p->prev;
@@ -731,16 +732,16 @@ void ikcp_parse_data(ikcpcb *kcp, IKCPSEG *newseg)
 			repeat = 1;
 			break;
 		}
-		if (_itimediff(sn, seg->sn) > 0) {
+		if (_itimediff(sn, seg->sn) > 0) {//这种情况不可能repeat了
 			break;
 		}
 	}
 
-	if (repeat == 0) {
+	if (repeat == 0) {//没重复，放入接收缓存
 		iqueue_init(&newseg->node);
 		iqueue_add(&newseg->node, p);
 		kcp->nrcv_buf++;
-	}	else {
+	}	else {//如果是重复包，delete
 		ikcp_segment_delete(kcp, newseg);
 	}
 
@@ -762,6 +763,8 @@ void ikcp_parse_data(ikcpcb *kcp, IKCPSEG *newseg)
 			break;
 		}
 	}
+	//接收窗口是用来约束rcv_queue的大小的，对rcv_buf没有约束，
+	//事实上rcv_buf也不会无限制增长，因为发送端会根据rcv_wnd发包，就算发了接收窗口之外的包也会被接收端丢弃
 
 #if 0
 	ikcp_qprint("queue", &kcp->rcv_queue);
@@ -823,7 +826,7 @@ int ikcp_input(ikcpcb *kcp, const char *data, long size)
 		ikcp_shrink_buf(kcp);
 
 		if (cmd == IKCP_CMD_ACK) {
-			if (_itimediff(kcp->current, ts) >= 0) {
+			if (_itimediff(kcp->current, ts) >= 0) {//注意！这里使用了kcp->current,由于current在ikcp_update中赋值，因此ikcp_input应在ikcp_update函数之后调用。
 				ikcp_update_ack(kcp, _itimediff(kcp->current, ts));
 			}
 			ikcp_parse_ack(kcp, sn);
@@ -857,9 +860,9 @@ int ikcp_input(ikcpcb *kcp, const char *data, long size)
 				ikcp_log(kcp, IKCP_LOG_IN_DATA, 
 					"input psh: sn=%lu ts=%lu", (unsigned long)sn, (unsigned long)ts);
 			}
-			if (_itimediff(sn, kcp->rcv_nxt + kcp->rcv_wnd) < 0) {
+			if (_itimediff(sn, kcp->rcv_nxt + kcp->rcv_wnd) < 0) {//此包序号在接收窗口内，如果不在就不收了
 				ikcp_ack_push(kcp, sn, ts);//特意把每个包的ts保存了起来，发送ack时要把ts发回到remote，ts表示remote发送这个包时的时间
-				if (_itimediff(sn, kcp->rcv_nxt) >= 0) {
+				if (_itimediff(sn, kcp->rcv_nxt) >= 0) {//此包序号属于待确认的包
 					seg = ikcp_segment_new(kcp, len);
 					seg->conv = conv;
 					seg->cmd = cmd;
