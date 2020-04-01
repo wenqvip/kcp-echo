@@ -115,7 +115,7 @@ bool storm::wait_remote()
 void storm::update()
 {
     static int cumulative_time = 0;
-    int time_now = timer::now();
+    int time_now = timer::since_start();
     cumulative_time += time_now - m_last_update_t;
     //发送心跳包，不发心跳包处于NAT后的端过段时间就无法连上了
     if (!wait_remote() && cumulative_time > 10000)

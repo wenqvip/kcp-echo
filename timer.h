@@ -8,6 +8,7 @@ public:
 	timer& operator= (const timer&) = delete;
 
 	static long now();
+	static long since_start();
 	static timer s_timer;
 };
 

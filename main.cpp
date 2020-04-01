@@ -83,7 +83,7 @@ int main(int argc, const char* argv[])
 
     std::stringstream ss;
     do {
-        auto frame_begin_t = timer::now();
+        auto frame_begin_t = timer::since_start();
         {
             std::lock_guard<std::mutex> guard(_mutex);
             stm.update();
@@ -114,10 +114,11 @@ int main(int argc, const char* argv[])
                 std::cout << "error when recv: " << count << std::endl;
             }
         }
-        auto frame_end_t = timer::now();
+        auto frame_end_t = timer::since_start();
         std::chrono::duration<long, std::milli> du(frame_end_t - frame_begin_t);
         using namespace std::chrono_literals;
         auto left = 10ms - du;
+        std::cout << "frame time: " << du.count() << ", left time: " << left.count() << std::endl;
         if (left.count() > 0)
             std::this_thread::sleep_for(left);
     } while (true);
