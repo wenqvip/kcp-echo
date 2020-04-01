@@ -118,7 +118,8 @@ int main(int argc, const char* argv[])
         std::chrono::duration<long, std::milli> du(frame_end_t - frame_begin_t);
         using namespace std::chrono_literals;
         auto left = 10ms - du;
-        std::cout << "frame time: " << du.count() << ", left time: " << left.count() << std::endl;
+        //std::cout << "frame time: " << du.count() << ", left time: " << left.count() << std::endl;
+        std::cout << "time: " << frame_end_t << std::endl;
         if (left.count() > 0)
             std::this_thread::sleep_for(left);
     } while (true);
