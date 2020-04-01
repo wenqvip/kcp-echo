@@ -75,7 +75,7 @@ int main(int argc, const char* argv[])
                 std::cin >> input;
                 {
                     std::lock_guard<std::mutex> guard(_mutex);
-                    stm.send(input.c_str(), input.size());
+                    stm.send(input);
                 }
             }
             }).detach();
@@ -90,10 +90,10 @@ int main(int argc, const char* argv[])
         }
 
         if (server_mode) {
-            char buf[4096] = { 0 };
-            ssize_t count = stm.recv(buf, 4096);
+            std::string buf;
+            ssize_t count = stm.recv(buf);
             if (count > 0) {
-                stm.send(buf, count);
+                stm.send(buf);
                 stm.flush();
             }
             else if (count < -1) {
@@ -101,11 +101,11 @@ int main(int argc, const char* argv[])
             }
         }
         else if (client_mode) {
-            char buf[4096] = { 0 };
+            std::string buf;
             ssize_t count = 0;
             {
                 std::lock_guard<std::mutex> guard(_mutex);
-                count = stm.recv(buf, 4096);
+                count = stm.recv(buf);
             }
             if (count > 0) {
                 std::cout << std::string(buf, count) << std::endl;

@@ -10,6 +10,8 @@
 #include <fcntl.h>
 #endif
 
+static std::string null_str;
+
 storm::storm(): m_kcp(nullptr), m_can_read(false), m_last_update_t(0), m_logging(true)
 {
 }
@@ -47,7 +49,7 @@ int storm::create_session(const char* host, int port)
     m_remote_addr.sin_port = htons(port);
 
     create_kcp();
-    return send(nullptr, 0);
+    return send(null_str);
 }
 
 int storm::accept_session(const char* host, int port)
@@ -76,9 +78,9 @@ void storm::create_kcp()
     //ikcp_nodelay(m_kcp, 1, 10, 2, 1);
 }
 
-size_t storm::send(const char* buf, size_t len)
+size_t storm::send(std::string& data)
 {
-    int ret = ikcp_send(m_kcp, buf, len);
+    int ret = ikcp_send(m_kcp, data.c_str(), data.size());
     if (ret < 0)
         std::cout << "sending error" << std::endl;
     return ret;
@@ -92,11 +94,6 @@ void storm::flush()
 bool storm::can_read()
 {
     return m_can_read;
-}
-
-ssize_t storm::recv(char* buf, size_t len)
-{
-    return ikcp_recv(m_kcp, buf, len);
 }
 
 ssize_t storm::recv(std::string& data)
@@ -137,7 +134,7 @@ void storm::update()
         {
             std::memcpy(&m_remote_addr, &addrinfo, sizeof(m_remote_addr));
             std::cout << "new connect from " << inet_ntoa(addrinfo.sin_addr) << ":" << ntohs(addrinfo.sin_port) << std::endl;
-            send(nullptr, 0);
+            send(null_str);
         }
 
         if (addrinfo.sin_addr.s_addr == m_remote_addr.sin_addr.s_addr)

@@ -11,9 +11,8 @@ public:
     int de_init();
     int create_session(const char* host, int port);
     int accept_session(const char* host, int port);
-    size_t send(const char* buf, size_t len);
+    size_t send(std::string& data);
     bool can_read();
-    ssize_t recv(char* buf, size_t len);
     ssize_t recv(std::string& data);
     void update();
     void flush();
