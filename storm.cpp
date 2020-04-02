@@ -11,7 +11,7 @@
 #include <fcntl.h>
 #endif
 
-static std::string keepalive_str("a");
+static std::string keepalive_str;
 
 storm::storm(): m_kcp(nullptr), m_can_read(false), m_last_update_t(0), m_logging(true)
 {
@@ -100,13 +100,14 @@ bool storm::can_read()
 
 ssize_t storm::recv(std::string& data)
 {
-    int data_size = ikcp_peeksize(m_kcp);
-    if (data_size > 0)
+    if (m_kcp->nrcv_que > 0)
     {
-        data.resize(data_size);
+        int data_size = ikcp_peeksize(m_kcp);
+        if (data_size > 0)
+            data.resize(data_size);
         return ikcp_recv(m_kcp, data.data(), data_size);
     }
-    return data_size;
+    return 0;
 }
 
 bool storm::wait_remote()
