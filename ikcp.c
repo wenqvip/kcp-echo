@@ -886,14 +886,14 @@ int ikcp_input(ikcpcb *kcp, const char *data, long size)
 			// tell remote my window size
 			kcp->probe |= IKCP_ASK_TELL;
 			if (ikcp_canlog(kcp, IKCP_LOG_IN_PROBE)) {
-				ikcp_log(kcp, IKCP_LOG_IN_PROBE, "input probe");
+				ikcp_log(kcp, IKCP_LOG_IN_PROBE, " input probe");
 			}
 		}
 		else if (cmd == IKCP_CMD_WINS) {
 			// do nothing
 			if (ikcp_canlog(kcp, IKCP_LOG_IN_WINS)) {
 				ikcp_log(kcp, IKCP_LOG_IN_WINS,
-					"input wins: %lu", (unsigned long)(wnd));
+					" input wins: %lu", (unsigned long)(wnd));
 			}
 		}
 		else {
@@ -1004,7 +1004,7 @@ void ikcp_flush(ikcpcb *kcp)
 		ikcp_ack_get(kcp, i, &seg.sn, &seg.ts);//特意将每个ack对应的包的发送时间ts设置好，发送给remote,remote据此计算延迟，超时重传等
 		ptr = ikcp_encode_seg(ptr, &seg);//这里将seg头部写入了buffer
 		if (ikcp_canlog(kcp, IKCP_LOG_OUT_ACK)) {
-			ikcp_log(kcp, IKCP_LOG_OUT_ACK, "output ack sn=%lu", (unsigned long)seg.sn);
+			ikcp_log(kcp, IKCP_LOG_OUT_ACK, "output ack: sn=%lu", (unsigned long)seg.sn);
 		}
 	}
 
