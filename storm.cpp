@@ -168,7 +168,7 @@ int storm::udp_output(const char* buf, int len, ikcpcb* kcp, void* user)
 
 void storm::log_callback(const char* log, struct IKCPCB* kcp, void* user)
 {
-    std::cout << log << std::endl;
+    std::cout << "[" << timer::since_start() << "]" << log << std::endl;
 }
 
 bool storm::set_socket_blocking(int fd, bool blocking)
