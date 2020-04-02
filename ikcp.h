@@ -356,6 +356,7 @@ typedef struct IKCPCB ikcpcb;
 #define IKCP_LOG_OUT_ACK		512
 #define IKCP_LOG_OUT_PROBE		1024
 #define IKCP_LOG_OUT_WINS		2048
+#define IKCP_LOG_FLUSH_TIME     4096
 
 #ifdef __cplusplus
 extern "C" {

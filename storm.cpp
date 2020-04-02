@@ -72,7 +72,7 @@ void storm::create_kcp()
 {
     m_kcp = ikcp_create(0xCBCBCBCB, this);
     m_kcp->output = storm::udp_output;
-    m_kcp->logmask = 0xFFFF;
+    m_kcp->logmask = IKCP_LOG_IN_ACK | IKCP_LOG_FLUSH_TIME;
     m_kcp->writelog = log_callback;
     ikcp_setmtu(m_kcp, MTU);
     //ikcp_nodelay(m_kcp, 1, 10, 2, 1);

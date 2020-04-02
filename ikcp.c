@@ -1213,6 +1213,9 @@ void ikcp_update(ikcpcb *kcp, IUINT32 current)
 			kcp->ts_flush = kcp->current + kcp->interval;
 		}
 		ikcp_flush(kcp);
+		if (ikcp_canlog(kcp, IKCP_LOG_FLUSH_TIME)) {
+			ikcp_log(kcp, IKCP_LOG_FLUSH_TIME, "flush time: %u", current);
+		}
 	}
 }
 
