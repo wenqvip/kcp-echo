@@ -11,7 +11,7 @@
 #include <fcntl.h>
 #endif
 
-static std::string null_str;
+static std::string keepalive_str("a");
 
 storm::storm(): m_kcp(nullptr), m_can_read(false), m_last_update_t(0), m_logging(true)
 {
@@ -50,7 +50,7 @@ int storm::create_session(const char* host, int port)
     m_remote_addr.sin_port = htons(port);
 
     create_kcp();
-    return send(null_str);
+    return send(keepalive_str);
 }
 
 int storm::accept_session(const char* host, int port)
@@ -140,7 +140,7 @@ void storm::update()
         {
             std::memcpy(&m_remote_addr, &addrinfo, sizeof(m_remote_addr));
             std::cout << "new connect from " << inet_ntoa(addrinfo.sin_addr) << ":" << ntohs(addrinfo.sin_port) << std::endl;
-            send(null_str);
+            send(keepalive_str);
         }
 
         if (addrinfo.sin_addr.s_addr == m_remote_addr.sin_addr.s_addr)
