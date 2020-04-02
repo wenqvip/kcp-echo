@@ -1147,6 +1147,14 @@ void ikcp_flush(ikcpcb *kcp)
 			if (segment->xmit >= kcp->dead_link) {//超过dead_link，认为连接已断开
 				kcp->state = (IUINT32)-1;
 			}
+
+			if (ikcp_canlog(kcp, IKCP_LOG_OUT_DATA)) {
+				ikcp_log(kcp, IKCP_LOG_OUT_DATA, 
+					"output psh: sn=%lu ts=%lu resendts=%lu rto=%lu fastack=%u, xmit=%u",
+					(unsigned long)segment->sn, (unsigned long)segment->ts,
+					(unsigned long)segment->resendts, (unsigned long)segment->rto,
+					segment->fastack, segment->xmit);
+			}
 		}
 	}
 
