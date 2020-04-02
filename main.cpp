@@ -108,7 +108,7 @@ int main(int argc, const char* argv[])
                 count = stm.recv(buf);
             }
             if (count > 0) {
-                std::cout << std::string(buf, count) << std::endl;
+                std::cout << buf << std::endl;
             }
             else if (count < -1) {
                 std::cout << "error when recv: " << count << std::endl;
