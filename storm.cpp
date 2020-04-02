@@ -3,6 +3,7 @@
 #include "timer.h"
 
 #include <iostream>
+#include <iomanip>
 #include <functional>
 #include <cstring>
 
@@ -169,7 +170,8 @@ int storm::udp_output(const char* buf, int len, ikcpcb* kcp, void* user)
 
 void storm::log_callback(const char* log, struct IKCPCB* kcp, void* user)
 {
-    std::cout << "[" << timer::since_start() << "]" << log << std::endl;
+    std::cout << "[" << std::setfill(' ') << std::setw(10)
+        << std::setiosflags(std::ios::right) << timer::since_start() << "] " << log << std::endl;
 }
 
 bool storm::set_socket_blocking(int fd, bool blocking)
