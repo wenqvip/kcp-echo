@@ -850,7 +850,7 @@ int ikcp_input(ikcpcb *kcp, const char *data, long size)
 			}
 			if (ikcp_canlog(kcp, IKCP_LOG_IN_ACK)) {
 				ikcp_log(kcp, IKCP_LOG_IN_ACK, 
-					"input ack: sn=%lu ts=%lu rtt=%ld rto=%ld", (unsigned long)sn, ts,
+					" input ack: sn=%lu ts=%lu rtt=%ld rto=%ld", (unsigned long)sn, ts,
 					(long)_itimediff(kcp->current, ts),
 					(long)kcp->rx_rto);
 			}
@@ -858,7 +858,7 @@ int ikcp_input(ikcpcb *kcp, const char *data, long size)
 		else if (cmd == IKCP_CMD_PUSH) {
 			if (ikcp_canlog(kcp, IKCP_LOG_IN_DATA)) {
 				ikcp_log(kcp, IKCP_LOG_IN_DATA, 
-					"input psh: sn=%lu ts=%lu", (unsigned long)sn, (unsigned long)ts);
+					" input psh: sn=%lu ts=%lu", (unsigned long)sn, (unsigned long)ts);
 			}
 			if (_itimediff(sn, kcp->rcv_nxt + kcp->rcv_wnd) < 0) {//此包序号在接收窗口内，如果不在就不收了
 				ikcp_ack_push(kcp, sn, ts);//特意把每个包的ts保存了起来，发送ack时要把ts发回到remote，ts表示remote发送这个包时的时间
