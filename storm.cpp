@@ -77,7 +77,7 @@ void storm::create_kcp()
                     | IKCP_LOG_IN_DATA | IKCP_LOG_OUT_DATA;
     m_kcp->writelog = log_callback;
     ikcp_setmtu(m_kcp, MTU);
-    ikcp_nodelay(m_kcp, 0, 30, 0, 0);
+    ikcp_nodelay(m_kcp, 0, 10, 0, 0);
 }
 
 size_t storm::send(std::string& data)
