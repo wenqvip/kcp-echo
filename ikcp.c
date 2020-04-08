@@ -1170,7 +1170,7 @@ void ikcp_flush(ikcpcb *kcp)
 		kcp->ssthresh = inflight / 2;//拥塞阈值减小
 		if (kcp->ssthresh < IKCP_THRESH_MIN)
 			kcp->ssthresh = IKCP_THRESH_MIN;
-		kcp->cwnd = kcp->ssthresh + resent;
+		kcp->cwnd = kcp->ssthresh + resent;//类似于tcp的快速恢复算法，发生快速重传减小拥塞窗口，但不会像发生超时重传那样减为1
 		kcp->incr = kcp->cwnd * kcp->mss;
 	}
 
@@ -1178,7 +1178,7 @@ void ikcp_flush(ikcpcb *kcp)
 		kcp->ssthresh = cwnd / 2;//拥塞阈值减小
 		if (kcp->ssthresh < IKCP_THRESH_MIN)
 			kcp->ssthresh = IKCP_THRESH_MIN;
-		kcp->cwnd = 1;
+		kcp->cwnd = 1;//发生超时重传，拥塞窗口减为1
 		kcp->incr = kcp->mss;
 	}
 
