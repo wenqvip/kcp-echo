@@ -13,7 +13,7 @@
 
 static std::string heartbeat_str;
 
-udp_connection::udp_connection(): m_kcp(nullptr), m_can_read(false), m_last_update_t(0), m_logging(true)
+udp_connection::udp_connection(): m_kcp(nullptr), m_last_update_t(0), m_logging(true)
 {
 }
 
@@ -85,10 +85,15 @@ void udp_connection::create_kcp()
 
 size_t udp_connection::send(std::string& data)
 {
+    return this->send(data.c_str(), data.size());
+}
+
+size_t udp_connection::send(const char* buf, size_t len)
+{
     if (is_shutdown())
         return 0;
 
-    int ret = ikcp_send(m_kcp, data.c_str(), data.size());
+    int ret = ikcp_send(m_kcp, buf, len);
     if (ret < 0)
     {
         std::cout << "sending error" << std::endl;
@@ -104,7 +109,7 @@ void udp_connection::flush()
 
 bool udp_connection::can_read()
 {
-    return m_can_read;
+    return m_kcp->nrcv_que > 0;
 }
 
 ssize_t udp_connection::recv(std::string& data)
@@ -160,7 +165,6 @@ void udp_connection::update()
 
         if (addrinfo.sin_addr.s_addr == m_remote_addr.sin_addr.s_addr)
         {
-            m_can_read = true;
             ikcp_input(m_kcp, buf, count);
         }
     }

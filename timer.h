@@ -1,14 +1,15 @@
 #pragma once
+#include "util.h"
 class timer
 {
-	long m_begin_t;
+	int64_t m_begin_t;
 public:
 	timer();
 	timer(const timer&) = delete;
 	timer& operator= (const timer&) = delete;
 
-	static long now();
-	static long since_start();
+	static int64_t now();
+	static int64_t since_start();
 	static timer s_timer;
 };
 

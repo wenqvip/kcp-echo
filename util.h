@@ -20,10 +20,6 @@ typedef int socket_t;
 #endif
 
 #include <string>
-
-typedef unsigned char uchar;
-typedef unsigned short ushort;
-typedef unsigned int uint;
-typedef unsigned long ulong;
+#include <cstdint>
 
 std::string str_to_hex(const char* str, int len);
