@@ -111,6 +111,8 @@ int main(int argc, const char* argv[])
                     _connection.send(buf);
                     if (count > sizeof(int64_t))
                     {
+                        if (show_delay)
+                            std::cout << "[deal time: " << timer::since_start() << "] ";
                         buf = buf.substr(sizeof(int64_t));
                     }
                     std::cout << "echo: " << buf << std::endl;

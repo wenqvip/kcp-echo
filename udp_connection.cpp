@@ -80,7 +80,7 @@ void udp_connection::create_kcp()
     }
     m_kcp->writelog = log_callback;
     ikcp_setmtu(m_kcp, MTU);
-    ikcp_nodelay(m_kcp, 0, 10, 0, 0);
+    ikcp_nodelay(m_kcp, 0, 100, 0, 0);
 }
 
 size_t udp_connection::send(std::string& data)
@@ -98,6 +98,10 @@ size_t udp_connection::send(const char* buf, size_t len)
     {
         std::cout << "sending error" << std::endl;
         return 0;
+    }
+    else
+    {
+        ikcp_flush(m_kcp);
     }
     return ret;
 }
@@ -166,6 +170,8 @@ void udp_connection::update()
         if (addrinfo.sin_addr.s_addr == m_remote_addr.sin_addr.s_addr)
         {
             ikcp_input(m_kcp, buf, count);
+            if (m_kcp->ackcount > 0)
+                ikcp_flush(m_kcp);
         }
     }
     else if (count < 0)
