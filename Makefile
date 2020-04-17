@@ -7,7 +7,7 @@
 # if you define OUT with suffix '.a', a static library will be made;
 # with suffix '.so', a dynamic library will be made;
 # any others, a excutable file will be made.
-OUT=storm
+OUT=kcp-echo
 
 CC=gcc
 CXX=g++

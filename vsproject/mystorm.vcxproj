@@ -70,7 +70,7 @@
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <TargetName>storm</TargetName>
+    <TargetName>kcp-echo</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -111,14 +111,14 @@
   <ItemGroup>
     <ClInclude Include="..\argparse.hpp" />
     <ClInclude Include="..\ikcp.h" />
-    <ClInclude Include="..\storm.h" />
+    <ClInclude Include="..\udp_connection.h" />
     <ClInclude Include="..\timer.h" />
     <ClInclude Include="..\util.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\ikcp.c" />
     <ClCompile Include="..\main.cpp" />
-    <ClCompile Include="..\storm.cpp" />
+    <ClCompile Include="..\udp_connection.cpp" />
     <ClCompile Include="..\timer.cpp" />
     <ClCompile Include="..\util.cpp" />
   </ItemGroup>

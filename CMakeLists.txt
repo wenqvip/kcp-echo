@@ -1,9 +1,9 @@
 cmake_minimum_required (VERSION 2.8)
 
-project(storm)
+project(kcp-echo)
 
 aux_source_directory(. DIR_SRCS)
-add_executable(storm.exe ${DIR_SRCS})
+add_executable(kcp-echo ${DIR_SRCS})
 
 set(CMAKE_C_COMPILER "gcc")
 set(CMAKE_CXX_COMPILER "g++")

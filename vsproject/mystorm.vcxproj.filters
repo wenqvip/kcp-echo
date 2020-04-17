@@ -3,14 +3,14 @@
   <ItemGroup>
     <ClInclude Include="..\argparse.hpp" />
     <ClInclude Include="..\ikcp.h" />
-    <ClInclude Include="..\storm.h" />
+    <ClInclude Include="..\udp_connection.h" />
     <ClInclude Include="..\util.h" />
     <ClInclude Include="..\timer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\ikcp.c" />
     <ClCompile Include="..\main.cpp" />
-    <ClCompile Include="..\storm.cpp" />
+    <ClCompile Include="..\udp_connection.cpp" />
     <ClCompile Include="..\util.cpp" />
     <ClCompile Include="..\timer.cpp" />
   </ItemGroup>

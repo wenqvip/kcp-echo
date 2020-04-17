@@ -3,21 +3,23 @@
 #include "ikcp.h"
 #include <string>
 
-class storm
+class udp_connection
 {
 public:
-    storm();
+    udp_connection();
     int init();
     int de_init();
-    int create_session(const char* host, int port);
-    int accept_session(const char* host, int port);
+    int connect(const char* host, int port);
+    int accept(const char* host, int port);
     size_t send(std::string& data);
     bool can_read();
     ssize_t recv(std::string& data);
     void update();
     void flush();
     inline void log(bool on) { m_logging = on; }
-    bool wait_remote();
+    bool is_waiting();
+    bool is_shutdown();
+    void set_heartbeat_interval(uint ms) { m_heartbeat_interval = ms; }
 
 protected:
     void create_kcp();
@@ -31,6 +33,7 @@ protected:
 private:
     ikcpcb* m_kcp;
     long m_last_update_t;
+    uint m_heartbeat_interval = 30000;
     bool m_can_read;
     socket_t m_sockfd;
     sockaddr_in m_remote_addr;

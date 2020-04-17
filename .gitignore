@@ -1,6 +1,6 @@
 deps
 objs
-storm
+kcp-echo
 .vscode
 .vs
 vsproject/x64

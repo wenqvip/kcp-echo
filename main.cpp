@@ -1,7 +1,7 @@
 #include "util.h"
 #include "ikcp.h"
 #include "argparse.hpp"
-#include "storm.h"
+#include "udp_connection.h"
 #include "timer.h"
 
 #include <stdio.h>
@@ -54,28 +54,27 @@ int main(int argc, const char* argv[])
 
     std::string host = parser.get<std::string>("host");
     int port = parser.get<int>("port");
-    storm stm;
-    stm.init();
-    stm.log(logging);
+    udp_connection _connection;
+    _connection.init();
+    _connection.log(logging);
     std::mutex _mutex;
     std::string input;
     if (server_mode)
     {
         std::cout << "running as server at " << host << ":" << port << std::endl;
-        stm.accept_session(host.c_str(), port);
+        _connection.accept(host.c_str(), port);
     }
     else if (client_mode)
     {
         std::cout << "running as client, remote " << host << ":" << port << std::endl;
-        stm.create_session(host.c_str(), port);
-
+        _connection.connect(host.c_str(), port);
 
         std::thread([&] {
             while (true) {
                 std::cin >> input;
                 {
                     std::lock_guard<std::mutex> guard(_mutex);
-                    stm.send(input);
+                    _connection.send(input);
                 }
             }
             }).detach();
@@ -83,17 +82,23 @@ int main(int argc, const char* argv[])
 
     std::stringstream ss;
     do {
+        if (_connection.is_shutdown())
+        {
+            std::cout << "connection shutdown" << std::endl;
+            break;
+        }
+
         auto frame_begin_t = timer::since_start();
         {
             std::lock_guard<std::mutex> guard(_mutex);
-            stm.update();
+            _connection.update();
         }
 
         if (server_mode) {
             std::string buf;
-            ssize_t count = stm.recv(buf);
+            ssize_t count = _connection.recv(buf);
             if (count > 0) {
-                stm.send(buf);
+                _connection.send(buf);
                 std::cout << "echo: " << buf << std::endl;
             }
             else if (count < -1) {
@@ -105,7 +110,7 @@ int main(int argc, const char* argv[])
             ssize_t count = 0;
             {
                 std::lock_guard<std::mutex> guard(_mutex);
-                count = stm.recv(buf);
+                count = _connection.recv(buf);
             }
             if (count > 0) {
                 std::cout << buf << std::endl;
