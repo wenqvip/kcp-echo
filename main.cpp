@@ -22,14 +22,12 @@ int main(int argc, const char* argv[])
     parser.add_argument("-l", "--logging").help("logging on").default_value(false).implicit_value(true);
     parser.add_argument("-d", "--delay").help("show delay time").default_value(false).implicit_value(true);
     parser.add_argument("host")
-        .help("remote ip, default: 127.0.0.1")
-        .default_value(std::string("127.0.0.1"))
-        .required();
+        .help("default: 127.0.0.1")
+        .default_value(std::string("127.0.0.1"));
     parser.add_argument("port")
-        .help("remote port, default: 1060")
+        .help("default: 1060")
         .action([](const std::string& value) { return std::stoi(value); })
-        .default_value(1060)
-        .required();
+        .default_value(1060);
 
     try {
         parser.parse_args(argc, argv);
@@ -90,9 +88,9 @@ int main(int argc, const char* argv[])
     std::vector<std::string> bufs;
     while (true)
     {
-        if (_connection.is_shutdown())
+        if (_connection.is_timeout())
         {
-            std::cout << "connection shutdown" << std::endl;
+            std::cout << "connection timeout" << std::endl;
             break;
         }
 

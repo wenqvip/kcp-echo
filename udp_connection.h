@@ -21,7 +21,7 @@ public:
 
     bool can_read();
     bool is_waiting();
-    bool is_shutdown();
+    bool is_timeout();
     void set_heartbeat_interval(uint ms) { m_heartbeat_interval = ms; }
 
 protected:

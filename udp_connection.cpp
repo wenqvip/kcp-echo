@@ -90,7 +90,7 @@ size_t udp_connection::send(std::string& data)
 
 size_t udp_connection::send(const char* buf, size_t len)
 {
-    if (is_shutdown())
+    if (is_timeout())
         return 0;
 
     int ret = ikcp_send(m_kcp, buf, len);
@@ -133,7 +133,7 @@ bool udp_connection::is_waiting()
     return m_remote_addr.sin_addr.s_addr == 0;
 }
 
-bool udp_connection::is_shutdown()
+bool udp_connection::is_timeout()
 {
     return m_kcp->state != 0;
 }
@@ -144,7 +144,7 @@ void udp_connection::update()
     int time_now = timer::since_start();
     cumulative_time += time_now - m_last_update_t;
     //发送心跳包，不发心跳包处于NAT后的端过段时间就无法连上了
-    if (!is_waiting() && !is_shutdown() && cumulative_time > m_heartbeat_interval)
+    if (!is_waiting() && !is_timeout() && cumulative_time > m_heartbeat_interval)
     {
         cumulative_time = 0;
         ikcp_send(m_kcp, nullptr, 0);
