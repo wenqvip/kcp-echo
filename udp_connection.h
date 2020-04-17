@@ -22,7 +22,7 @@ public:
     bool can_read();
     bool is_waiting();
     bool is_timeout();
-    void set_heartbeat_interval(uint ms) { m_heartbeat_interval = ms; }
+    void set_heartbeat_interval(uint32_t ms) { m_heartbeat_interval = ms; }
 
 protected:
     void create_kcp();
@@ -36,7 +36,7 @@ protected:
 private:
     ikcpcb* m_kcp;
     long m_last_update_t;
-    uint m_heartbeat_interval = 30000;
+    uint32_t m_heartbeat_interval = 30000;
     socket_t m_sockfd;
     sockaddr_in m_remote_addr;
     bool m_logging;
