@@ -15,7 +15,7 @@
 
 int main(int argc, const char* argv[])
 {
-    argparse::ArgumentParser parser("kcp test");
+    argparse::ArgumentParser parser("./kcp-echo");
     parser.add_argument("-s", "--server").help("server mode").default_value(false).implicit_value(true);
     parser.add_argument("-c", "--client").help("client mode").default_value(false).implicit_value(true);
     parser.add_argument("-l", "--logging").help("logging on").default_value(false).implicit_value(true);
