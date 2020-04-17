@@ -1,0 +1,23 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: install depends
+      run: |
+        sudo apt -y install gcc-8 g++-8
+        sudo rm -f /usr/bin/gcc /usr/bin/g++
+        sudo ln -s gcc-8 gcc
+        sudo ln -s g++-8 g++
+    - name: make
+      run: make
