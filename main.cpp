@@ -21,6 +21,7 @@ int main(int argc, const char* argv[])
     parser.add_argument("-c", "--client").help("client mode").default_value(false).implicit_value(true);
     parser.add_argument("-l", "--logging").help("logging on").default_value(false).implicit_value(true);
     parser.add_argument("-d", "--delay").help("show delay time").default_value(false).implicit_value(true);
+    parser.add_argument("-p", "--ping-pong").help("perform ping-pong test(for 1 minute)").default_value(false).implicit_value(true);
     parser.add_argument("host")
         .help("default: 127.0.0.1")
         .default_value(std::string("127.0.0.1"));
@@ -44,6 +45,8 @@ int main(int argc, const char* argv[])
     bool logging = (parser["-l"] == true);
     bool client_mode = (parser["-c"] == true);
     bool show_delay = (parser["-d"] == true);
+    bool ping_pong = (parser["-p"] == true);
+    uint32_t ping_pong_times = 0;
     if (!server_mode && !client_mode)
         server_mode = true;
     if (server_mode && client_mode)
@@ -70,9 +73,20 @@ int main(int argc, const char* argv[])
         std::cout << "running as client, remote " << host << ":" << port << std::endl;
         _connection.connect(host.c_str(), port);
 
+        if (ping_pong)
+        {
+            int64_t now_t = timer::since_start();
+            std::string str((const char*)&now_t, sizeof(int64_t));
+            str += "ping-pong test";
+            _connection.send(str);
+        }
+        
         std::thread([&]
         {
             while (true) {
+                if (ping_pong)
+                    continue;
+
                 std::cin >> input;
                 {
                     std::lock_guard<std::mutex> guard(_mutex);
@@ -107,7 +121,7 @@ int main(int argc, const char* argv[])
                 ssize_t count = _connection.recv(buf);
                 if (count > 0) {
                     _connection.send(buf);
-                    if (count > sizeof(int64_t))
+                    if (count >= sizeof(int64_t))
                     {
                         if (show_delay)
                             std::cout << "[deal time: " << timer::since_start() << "] ";
@@ -130,7 +144,7 @@ int main(int argc, const char* argv[])
                     count = _connection.recv(buf);
                 }
                 if (count > 0) {
-                    if (count > sizeof(int64_t))
+                    if (count >= sizeof(int64_t))
                     {
                         int64_t send_t = *((int64_t*)(buf.substr(0, sizeof(int64_t)).c_str()));
                         int64_t now_t = timer::since_start();
@@ -139,6 +153,20 @@ int main(int argc, const char* argv[])
                         buf = buf.substr(sizeof(int64_t));
                     }
                     std::cout << buf << std::endl;
+                    if (ping_pong)
+                    {
+                        int64_t now_t = timer::since_start();
+                        if (now_t > 60000)
+                        {
+                            ping_pong = false;
+                            std::cout << "ping-pong times: " << ping_pong_times << std::endl;
+                            continue;
+                        }
+                        std::string str((const char*)&now_t, sizeof(int64_t));
+                        str += buf;
+                        _connection.send(str);
+                        ping_pong_times++;
+                    }
                 }
                 else if (count < -1) {
                     std::cout << "error when recv: " << count << std::endl;
