@@ -37,6 +37,7 @@ private:
     ikcpcb* m_kcp;
     long m_last_update_t;
     uint32_t m_heartbeat_interval = 30000;
+    uint32_t m_heartbeat_time = 0;
     socket_t m_sockfd;
     sockaddr_in m_remote_addr;
     bool m_logging;

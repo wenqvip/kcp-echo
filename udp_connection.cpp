@@ -13,7 +13,7 @@
 
 static std::string heartbeat_str;
 
-udp_connection::udp_connection(): m_kcp(nullptr), m_last_update_t(0), m_logging(true)
+udp_connection::udp_connection(): m_kcp(nullptr), m_last_update_t(0), m_logging(true), m_heartbeat_time(0)
 {
 }
 
@@ -80,7 +80,7 @@ void udp_connection::create_kcp()
     }
     m_kcp->writelog = log_callback;
     ikcp_setmtu(m_kcp, MTU);
-    ikcp_nodelay(m_kcp, 0, 100, 0, 0);
+    //ikcp_nodelay(m_kcp, 0, 100, 0, 0);
 }
 
 size_t udp_connection::send(std::string& data)
@@ -140,13 +140,12 @@ bool udp_connection::is_timeout()
 
 void udp_connection::update()
 {
-    static int cumulative_time = 0;
     int time_now = timer::since_start();
-    cumulative_time += time_now - m_last_update_t;
+    m_heartbeat_time += time_now - m_last_update_t;
     //发送心跳包，不发心跳包处于NAT后的端过段时间就无法连上了
-    if (!is_waiting() && !is_timeout() && cumulative_time > m_heartbeat_interval)
+    if (!is_waiting() && !is_timeout() && m_heartbeat_time > m_heartbeat_interval)
     {
-        cumulative_time = 0;
+        m_heartbeat_time = 0;
         ikcp_send(m_kcp, nullptr, 0);
     }
 
@@ -190,6 +189,8 @@ int udp_connection::udp_output(const char* buf, int len, ikcpcb* kcp, void* user
     ssize_t ret = ::sendto(pConnection->m_sockfd, buf, len, 0, (const sockaddr*)&(pConnection->m_remote_addr), sizeof(sockaddr_in));
     if (ret <= 0)
         std::cout << "sending error" << std::endl;
+    else
+        pConnection->m_heartbeat_time = 0;//optimize heart beat
     return ret;
 }
 

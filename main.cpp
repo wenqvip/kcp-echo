@@ -123,11 +123,12 @@ int main(int argc, const char* argv[])
                     _connection.send(buf);
                     if (count >= sizeof(int64_t))
                     {
-                        if (show_delay)
+                        if (show_delay && !ping_pong)
                             std::cout << "[deal time: " << timer::since_start() << "] ";
                         buf = buf.substr(sizeof(int64_t));
                     }
-                    std::cout << "echo: " << buf << std::endl;
+                    if (!ping_pong)
+                        std::cout << "echo: " << buf << std::endl;
                 }
                 else if (count < -1) {
                     std::cout << "error when recv: " << count << std::endl;
@@ -148,11 +149,12 @@ int main(int argc, const char* argv[])
                     {
                         int64_t send_t = *((int64_t*)(buf.substr(0, sizeof(int64_t)).c_str()));
                         int64_t now_t = timer::since_start();
-                        if (show_delay)
+                        if (show_delay && !ping_pong)
                             std::cout << "[send: " << send_t << ", now: " << now_t << ", delay: " << now_t - send_t << "] ";
                         buf = buf.substr(sizeof(int64_t));
                     }
-                    std::cout << buf << std::endl;
+                    if (!ping_pong)
+                        std::cout << buf << std::endl;
                     if (ping_pong)
                     {
                         int64_t now_t = timer::since_start();
@@ -179,8 +181,8 @@ int main(int argc, const char* argv[])
         auto left = 2ms - du;
         //std::cout << "frame time: " << du.count() << ", left time: " << left.count() << std::endl;
         //std::cout << "time: " << frame_end_t << std::endl;
-        if (left.count() > 0)
-            std::this_thread::sleep_for(left);
+        //if (left.count() > 0)
+        //    std::this_thread::sleep_for(left);
     }
 
     return 0;
