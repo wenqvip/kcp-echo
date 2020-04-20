@@ -183,6 +183,7 @@ int main(int argc, const char* argv[])
         //std::cout << "time: " << frame_end_t << std::endl;
         //if (left.count() > 0)
         //    std::this_thread::sleep_for(left);
+        std::this_thread::sleep_for(0ms);
     }
 
     return 0;
