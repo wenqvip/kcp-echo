@@ -2,6 +2,7 @@
 #include "util.h"
 #include "ikcp.h"
 #include <string>
+#include <queue>
 
 class udp_connection
 {
@@ -26,6 +27,8 @@ public:
 
 protected:
     void create_kcp();
+    void recv_listener();
+    void create_recv_thread();
     static int udp_output(const char* buf, int len, ikcpcb* kcp, void* user);
     static void log_callback(const char* log, struct IKCPCB* kcp, void* user);
     bool set_socket_blocking(int fd, bool blocking);
@@ -40,5 +43,7 @@ private:
     uint32_t m_heartbeat_time = 0;
     socket_t m_sockfd;
     sockaddr_in m_remote_addr;
+    std::queue<std::string> m_recv_queue;
+    std::mutex m_recv_mutex;
     bool m_logging;
 };
