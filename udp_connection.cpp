@@ -7,7 +7,6 @@
 #include <functional>
 #include <cstring>
 #include <thread>
-#include <mutex>
 
 #ifdef LINUX
 #include <fcntl.h>
@@ -125,7 +124,7 @@ void udp_connection::recv_listener()
 
 void udp_connection::create_recv_thread()
 {
-    std::thread(recv_listener).detach();
+    std::thread(std::bind(std::mem_fn(&udp_connection::recv_listener), this)).detach();
 }
 
 size_t udp_connection::send(std::string& data)
@@ -202,7 +201,7 @@ void udp_connection::update()
         std::lock_guard<std::mutex> guard(m_recv_mutex);
         recv_queue.swap(m_recv_queue);
     }
-    while (recv_queue.size > 0)
+    while (recv_queue.size() > 0)
     {
         std::string& data = recv_queue.front();
 

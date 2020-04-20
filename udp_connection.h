@@ -3,6 +3,7 @@
 #include "ikcp.h"
 #include <string>
 #include <queue>
+#include <mutex>
 
 class udp_connection
 {
