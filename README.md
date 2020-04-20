@@ -3,15 +3,25 @@ A echo server/client with KCP
 For better reading of kcp code, I also add some comments in it. Welcome to check them.
 
 ### How to compile:
-#### Linux: 
-install gcc-8 or above  
-compile with `make`  
-#### Win:
-open `./vsproject/mystorm.sln` with Visual Studio 2019 and compile (use c++17)
+* Ubuntu:  
+> `sudo apt install -y gcc-8 g++-8`  
+> `rm -f /usr/bin/gcc /usr/bin/g++`  
+> `ln -s /usr/bin/gcc-8 /usr/bin/gcc`  
+> `ln -s /usr/bin/g++-8 /usr/bin/g++`  
+> `make`  
+* Windows:  
+open `./vsproject/mystorm.sln` with Visual Studio 2019 and compile with c++17  
+
 ### How to use:
-#### Start server:  
-`./kcp-echo -s 127.0.0.1 1060`  
-#### Start client:  
-`./kcp-echo -c 127.0.0.1 1060`  
-#### You can also check the help:  
-`./kcp-echo -h`  
+* Quick run (default IP is 127.0.0.1, port 1060):  
+> server: `./kcp-echo -s`  
+> client: `./kcp-echo -c`  
+* You can check the delay time of one round trip of one packet:
+> server: `./kcp-echo -s -d`  
+> client: `./kcp-echo -c -d`  
+* Perform a ping pong test in one minute, after 1 minute, client will tell you how many times the ping-pong action is performed. The average RTT can be calculated with `60000 / ping-pong-times`.
+> server: `./kcp-echo -s -p`  
+> client: `./kcp-echo -c -p`  
+* Other options:  
+> show help: `./kcp-echo -h`  
+> show kcp log: `-l`  
