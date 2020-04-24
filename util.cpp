@@ -3,7 +3,7 @@
 #include <iomanip>
 
 
-std::string str_to_hex(const char* str, int len)
+std::string StringToHex(const char* str, int len)
 {
     std::stringstream ss;
     for(int i = 0; i < len; i++)
