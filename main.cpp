@@ -58,27 +58,27 @@ int main(int argc, const char* argv[])
 
     std::string host = parser.get<std::string>("host");
     int port = parser.get<int>("port");
-    udp_connection _connection;
-    _connection.init();
-    _connection.log(logging);
+    UdpConnection udp_connection;
+    udp_connection.Init();
+    udp_connection.enable_log(logging);
     std::mutex _mutex;
     std::string input;
     if (server_mode)
     {
         std::cout << "running as server at " << host << ":" << port << std::endl;
-        _connection.accept(host.c_str(), port);
+        udp_connection.Accept(host.c_str(), port);
     }
     else if (client_mode)
     {
         std::cout << "running as client, remote " << host << ":" << port << std::endl;
-        _connection.connect(host.c_str(), port);
+        udp_connection.Connect(host.c_str(), port);
 
         if (ping_pong)
         {
-            int64_t now_t = timer::since_start();
+            int64_t now_t = Timer::since_start();
             std::string str((const char*)&now_t, sizeof(int64_t));
             str += "ping-pong test";
-            _connection.send(str);
+            udp_connection.Send(str);
         }
         
         std::thread([&]
@@ -90,10 +90,10 @@ int main(int argc, const char* argv[])
                 std::cin >> input;
                 {
                     std::lock_guard<std::mutex> guard(_mutex);
-                    int64_t now_t = timer::since_start();
+                    int64_t now_t = Timer::since_start();
                     std::string str((const char*)&now_t, sizeof(int64_t));
                     input = str + input;
-                    _connection.send(input);
+                    udp_connection.Send(input);
                 }
             }
         }).detach();
@@ -102,29 +102,29 @@ int main(int argc, const char* argv[])
     std::vector<std::string> bufs;
     while (true)
     {
-        if (_connection.is_timeout())
+        if (udp_connection.is_timeout())
         {
             std::cout << "connection timeout" << std::endl;
             break;
         }
 
-        int64_t frame_begin_t = timer::since_start();
+        int64_t frame_begin_t = Timer::since_start();
         {
             std::lock_guard<std::mutex> guard(_mutex);
-            _connection.update();
+            udp_connection.Update();
         }
 
         if (server_mode) {
             std::string buf;
-            while(_connection.can_read())
+            while(udp_connection.can_read())
             {
-                ssize_t count = _connection.recv(buf);
+                ssize_t count = udp_connection.Recv(buf);
                 if (count > 0) {
-                    _connection.send(buf);
+                    udp_connection.Send(buf);
                     if (count >= sizeof(int64_t))
                     {
                         if (show_delay && !ping_pong)
-                            std::cout << "[deal time: " << timer::since_start() << "] ";
+                            std::cout << "[deal time: " << Timer::since_start() << "] ";
                         buf = buf.substr(sizeof(int64_t));
                     }
                     if (!ping_pong)
@@ -137,18 +137,18 @@ int main(int argc, const char* argv[])
         }
         else if (client_mode) {
             std::string buf;
-            while (_connection.can_read())
+            while (udp_connection.can_read())
             {
                 ssize_t count = 0;
                 {
                     std::lock_guard<std::mutex> guard(_mutex);
-                    count = _connection.recv(buf);
+                    count = udp_connection.Recv(buf);
                 }
                 if (count > 0) {
                     if (count >= sizeof(int64_t))
                     {
                         int64_t send_t = *((int64_t*)(buf.substr(0, sizeof(int64_t)).c_str()));
-                        int64_t now_t = timer::since_start();
+                        int64_t now_t = Timer::since_start();
                         if (show_delay && !ping_pong)
                             std::cout << "[send: " << send_t << ", now: " << now_t << ", delay: " << now_t - send_t << "] ";
                         buf = buf.substr(sizeof(int64_t));
@@ -157,7 +157,7 @@ int main(int argc, const char* argv[])
                         std::cout << buf << std::endl;
                     if (ping_pong)
                     {
-                        int64_t now_t = timer::since_start();
+                        int64_t now_t = Timer::since_start();
                         if (now_t > 60000)
                         {
                             ping_pong = false;
@@ -166,7 +166,7 @@ int main(int argc, const char* argv[])
                         }
                         std::string str((const char*)&now_t, sizeof(int64_t));
                         str += buf;
-                        _connection.send(str);
+                        udp_connection.Send(str);
                         ping_pong_times++;
                     }
                 }
@@ -175,7 +175,7 @@ int main(int argc, const char* argv[])
                 }
             }
         }
-        int64_t frame_end_t = timer::since_start();
+        int64_t frame_end_t = Timer::since_start();
         std::chrono::duration<long, std::milli> du(frame_end_t - frame_begin_t);
         using namespace std::chrono_literals;
         auto left = 2ms - du;

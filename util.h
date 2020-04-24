@@ -22,4 +22,4 @@ typedef int socket_t;
 #include <string>
 #include <cstdint>
 
-std::string str_to_hex(const char* str, int len);
+std::string StringToHex(const char* str, int len);

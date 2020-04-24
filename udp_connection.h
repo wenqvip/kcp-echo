@@ -3,42 +3,42 @@
 #include "ikcp.h"
 #include <string>
 
-class udp_connection
+class UdpConnection
 {
 public:
-    udp_connection();
-    int init();
-    int de_init();
-    int connect(const char* host, int port);
-    int accept(const char* host, int port);
-    size_t send(std::string& data);
-    size_t send(const char* buf, size_t len);
-    ssize_t recv(std::string& data);
-    void update();
-    void flush();
+    UdpConnection();
+    int Init();
+    int DeInit();
+    int Connect(const char* host, int port);
+    int Accept(const char* host, int port);
+    size_t Send(std::string& data);
+    size_t Send(const char* buf, size_t len);
+    ssize_t Recv(std::string& data);
+    void Update();
+    void Flush();
 
-    inline void log(bool on) { m_logging = on; }
+    inline void enable_log(bool enable) { enable_log_ = enable; }
 
     bool can_read();
     bool is_waiting();
     bool is_timeout();
-    void set_heartbeat_interval(uint32_t ms) { m_heartbeat_interval = ms; }
+    void set_heartbeat_interval(uint32_t ms) { heartbeat_interval_ = ms; }
+    bool set_socket_blocking(int fd, bool blocking);
 
 protected:
-    void create_kcp();
-    static int udp_output(const char* buf, int len, ikcpcb* kcp, void* user);
-    static void log_callback(const char* log, struct IKCPCB* kcp, void* user);
-    bool set_socket_blocking(int fd, bool blocking);
-    void log(const char* prefix, const char* buf, size_t len);
+    void CreateKcp();
+    static int Output(const char* buf, int len, ikcpcb* kcp, void* user);
+    static void WriteLog(const char* log, struct IKCPCB* kcp, void* user);
+    void Log(const char* prefix, const char* buf, size_t len);
 
-    static const int MTU = 1472;
+    static const int kMTU = 1472;
 
 private:
-    ikcpcb* m_kcp;
-    long m_last_update_t;
-    uint32_t m_heartbeat_interval = 30000;
-    uint32_t m_heartbeat_time = 0;
-    socket_t m_sockfd;
-    sockaddr_in m_remote_addr;
-    bool m_logging;
+    ikcpcb* kcp_;
+    long last_update_time_;
+    uint32_t heartbeat_interval_ = 30000;
+    uint32_t heartbeat_time_ = 0;
+    socket_t sockfd_;
+    sockaddr_in remote_addr_;
+    bool enable_log_;
 };

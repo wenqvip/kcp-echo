@@ -13,11 +13,11 @@
 
 static std::string heartbeat_str;
 
-udp_connection::udp_connection(): m_kcp(nullptr), m_last_update_t(0), m_logging(true), m_heartbeat_time(0)
+UdpConnection::UdpConnection(): kcp_(nullptr), last_update_time_(0), enable_log_(true), heartbeat_time_(0)
 {
 }
 
-int udp_connection::init()
+int UdpConnection::Init()
 {
 #if defined(_WIN64) || defined(_WIN32)
     WSADATA wsaData;
@@ -29,10 +29,10 @@ int udp_connection::init()
 #endif
 }
 
-int udp_connection::de_init()
+int UdpConnection::DeInit()
 {
 #if defined(_WIN64) || defined(_WIN32)
-    closesocket(m_sockfd);
+    closesocket(sockfd_);
     return WSACleanup();
 #endif
 #ifdef LINUX
@@ -40,60 +40,60 @@ int udp_connection::de_init()
 #endif
 }
 
-int udp_connection::connect(const char* host, int port)
+int UdpConnection::Connect(const char* host, int port)
 {
-    m_sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    set_socket_blocking(m_sockfd, false);
+    sockfd_ = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    set_socket_blocking(sockfd_, false);
     
-    m_remote_addr.sin_family = AF_INET;
-    m_remote_addr.sin_addr.s_addr = inet_addr(host);
-    m_remote_addr.sin_port = htons(port);
+    remote_addr_.sin_family = AF_INET;
+    remote_addr_.sin_addr.s_addr = inet_addr(host);
+    remote_addr_.sin_port = htons(port);
 
-    create_kcp();
-    return send(heartbeat_str);
+    CreateKcp();
+    return Send(heartbeat_str);
 }
 
-int udp_connection::accept(const char* host, int port)
+int UdpConnection::Accept(const char* host, int port)
 {
-    std::memset(&m_remote_addr, 0, sizeof(m_remote_addr));
+    std::memset(&remote_addr_, 0, sizeof(remote_addr_));
 
-    m_sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    set_socket_blocking(m_sockfd, false);
+    sockfd_ = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    set_socket_blocking(sockfd_, false);
     sockaddr_in addr_info;
     addr_info.sin_family = AF_INET;
     addr_info.sin_addr.s_addr = inet_addr(host);
     addr_info.sin_port = htons(port);
-    ::bind(m_sockfd, (const sockaddr*)&addr_info, sizeof(addr_info));
+    ::bind(sockfd_, (const sockaddr*)&addr_info, sizeof(addr_info));
 
-    create_kcp();
+    CreateKcp();
     return 0;
 }
 
-void udp_connection::create_kcp()
+void UdpConnection::CreateKcp()
 {
-    m_kcp = ikcp_create(0xCBCBCBCB, this);
-    m_kcp->output = udp_connection::udp_output;
-    if (m_logging)
+    kcp_ = ikcp_create(0xCBCBCBCB, this);
+    kcp_->output = UdpConnection::Output;
+    if (enable_log_)
     {
-        m_kcp->logmask = IKCP_LOG_IN_ACK | IKCP_LOG_OUT_ACK
+        kcp_->logmask = IKCP_LOG_IN_ACK | IKCP_LOG_OUT_ACK
                     | IKCP_LOG_IN_DATA | IKCP_LOG_OUT_DATA;
     }
-    m_kcp->writelog = log_callback;
-    ikcp_setmtu(m_kcp, MTU);
-    //ikcp_nodelay(m_kcp, 0, 100, 0, 0);
+    kcp_->writelog = UdpConnection::WriteLog;
+    ikcp_setmtu(kcp_, kMTU);
+    //ikcp_nodelay(kcp_, 0, 100, 0, 0);
 }
 
-size_t udp_connection::send(std::string& data)
+size_t UdpConnection::Send(std::string& data)
 {
-    return this->send(data.c_str(), data.size());
+    return this->Send(data.c_str(), data.size());
 }
 
-size_t udp_connection::send(const char* buf, size_t len)
+size_t UdpConnection::Send(const char* buf, size_t len)
 {
     if (is_timeout())
         return 0;
 
-    int ret = ikcp_send(m_kcp, buf, len);
+    int ret = ikcp_send(kcp_, buf, len);
     if (ret < 0)
     {
         std::cout << "sending error" << std::endl;
@@ -101,76 +101,76 @@ size_t udp_connection::send(const char* buf, size_t len)
     }
     else
     {
-        ikcp_flush(m_kcp);
+        ikcp_flush(kcp_);
     }
     return ret;
 }
 
-void udp_connection::flush()
+void UdpConnection::Flush()
 {
-    ikcp_flush(m_kcp);
+    ikcp_flush(kcp_);
 }
 
-bool udp_connection::can_read()
+bool UdpConnection::can_read()
 {
-    return m_kcp->nrcv_que > 0;
+    return kcp_->nrcv_que > 0;
 }
 
-ssize_t udp_connection::recv(std::string& data)
+ssize_t UdpConnection::Recv(std::string& data)
 {
-    if (m_kcp->nrcv_que > 0)
+    if (kcp_->nrcv_que > 0)
     {
-        int data_size = ikcp_peeksize(m_kcp);
+        int data_size = ikcp_peeksize(kcp_);
         if (data_size > 0)
             data.resize(data_size);
-        return ikcp_recv(m_kcp, data.data(), data_size);
+        return ikcp_recv(kcp_, data.data(), data_size);
     }
     return 0;
 }
 
-bool udp_connection::is_waiting()
+bool UdpConnection::is_waiting()
 {
-    return m_remote_addr.sin_addr.s_addr == 0;
+    return remote_addr_.sin_addr.s_addr == 0;
 }
 
-bool udp_connection::is_timeout()
+bool UdpConnection::is_timeout()
 {
-    return m_kcp->state != 0;
+    return kcp_->state != 0;
 }
 
-void udp_connection::update()
+void UdpConnection::Update()
 {
-    int time_now = timer::since_start();
-    m_heartbeat_time += time_now - m_last_update_t;
+    int time_now = Timer::since_start();
+    heartbeat_time_ += time_now - last_update_time_;
     //发送心跳包，不发心跳包处于NAT后的端过段时间就无法连上了
-    if (!is_waiting() && !is_timeout() && m_heartbeat_time > m_heartbeat_interval)
+    if (!is_waiting() && !is_timeout() && heartbeat_time_ > heartbeat_interval_)
     {
-        m_heartbeat_time = 0;
-        ikcp_send(m_kcp, nullptr, 0);
+        heartbeat_time_ = 0;
+        ikcp_send(kcp_, nullptr, 0);
     }
 
-    ikcp_update(m_kcp, time_now);
-    m_last_update_t = time_now;
+    ikcp_update(kcp_, time_now);
+    last_update_time_ = time_now;
 
-    char buf[MTU] = {0};
+    char buf[kMTU] = {0};
     sockaddr_in addrinfo;
     socklen_t len = sizeof(addrinfo);
-    ssize_t count = ::recvfrom(m_sockfd, buf, MTU, 0, (sockaddr*)&addrinfo, &len);
+    ssize_t count = ::recvfrom(sockfd_, buf, kMTU, 0, (sockaddr*)&addrinfo, &len);
 
     if (count > 0)
     {
         if (is_waiting())
         {
-            std::memcpy(&m_remote_addr, &addrinfo, sizeof(m_remote_addr));
+            std::memcpy(&remote_addr_, &addrinfo, sizeof(remote_addr_));
             std::cout << "new connect from " << inet_ntoa(addrinfo.sin_addr) << ":" << ntohs(addrinfo.sin_port) << std::endl;
-            send(heartbeat_str);
+            Send(heartbeat_str);
         }
 
-        if (addrinfo.sin_addr.s_addr == m_remote_addr.sin_addr.s_addr)
+        if (addrinfo.sin_addr.s_addr == remote_addr_.sin_addr.s_addr)
         {
-            ikcp_input(m_kcp, buf, count);
-            if (m_kcp->ackcount > 0)
-                ikcp_flush(m_kcp);
+            ikcp_input(kcp_, buf, count);
+            if (kcp_->ackcount > 0)
+                ikcp_flush(kcp_);
         }
     }
     else if (count < 0)
@@ -183,24 +183,24 @@ void udp_connection::update()
     }
 }
 
-int udp_connection::udp_output(const char* buf, int len, ikcpcb* kcp, void* user)
+int UdpConnection::Output(const char* buf, int len, ikcpcb* kcp, void* user)
 {
-    udp_connection* pConnection = (udp_connection*)user;
-    ssize_t ret = ::sendto(pConnection->m_sockfd, buf, len, 0, (const sockaddr*)&(pConnection->m_remote_addr), sizeof(sockaddr_in));
+    UdpConnection* pConnection = (UdpConnection*)user;
+    ssize_t ret = ::sendto(pConnection->sockfd_, buf, len, 0, (const sockaddr*)&(pConnection->remote_addr_), sizeof(sockaddr_in));
     if (ret <= 0)
         std::cout << "sending error" << std::endl;
     else
-        pConnection->m_heartbeat_time = 0;//optimize heart beat
+        pConnection->heartbeat_time_ = 0;//optimize heart beat
     return ret;
 }
 
-void udp_connection::log_callback(const char* log, struct IKCPCB* kcp, void* user)
+void UdpConnection::WriteLog(const char* log, struct IKCPCB* kcp, void* user)
 {
     std::cout << "[" << std::setfill(' ') << std::setw(10)
-        << std::setiosflags(std::ios::right) << timer::since_start() << "] " << log << std::endl;
+        << std::setiosflags(std::ios::right) << Timer::since_start() << "] " << log << std::endl;
 }
 
-bool udp_connection::set_socket_blocking(int fd, bool blocking)
+bool UdpConnection::set_socket_blocking(int fd, bool blocking)
 {
 #ifdef LINUX
     if (fd < 0) return false;
@@ -217,12 +217,12 @@ bool udp_connection::set_socket_blocking(int fd, bool blocking)
 #endif
 }
 
-void udp_connection::log(const char* prefix, const char* buf, size_t len)
+void UdpConnection::Log(const char* prefix, const char* buf, size_t len)
 {
     std::cout << prefix << len << " bytes: ";
     if (len >= 24 && *((int*)buf) == 0xcbcbcbcb)
     {
-        std::cout << str_to_hex(buf, 24);
+        std::cout << StringToHex(buf, 24);
         buf += 24;
         len -= 24;
     }
