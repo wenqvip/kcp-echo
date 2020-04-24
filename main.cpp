@@ -75,6 +75,7 @@ int main(int argc, const char* argv[])
 
         if (ping_pong)
         {
+            std::cout << "perform ping-pong test..." << std::endl;
             int64_t now_t = Timer::since_start();
             std::string str((const char*)&now_t, sizeof(int64_t));
             str += "ping-pong test";
@@ -183,7 +184,7 @@ int main(int argc, const char* argv[])
         //std::cout << "time: " << frame_end_t << std::endl;
         //if (left.count() > 0)
         //    std::this_thread::sleep_for(left);
-        std::this_thread::sleep_for(0ms);
+        //std::this_thread::sleep_for(0ms);
     }
 
     return 0;
