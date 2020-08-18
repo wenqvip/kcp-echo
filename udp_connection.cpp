@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <functional>
 #include <cstring>
+#include <thread>
 
 #ifdef LINUX
 #include <fcntl.h>
@@ -43,14 +44,16 @@ int UdpConnection::DeInit()
 int UdpConnection::Connect(const char* host, int port)
 {
     sockfd_ = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    set_socket_blocking(sockfd_, false);
+    //set_socket_blocking(sockfd_, false);
     
     remote_addr_.sin_family = AF_INET;
     remote_addr_.sin_addr.s_addr = inet_addr(host);
     remote_addr_.sin_port = htons(port);
 
     CreateKcp();
-    return Send(heartbeat_str);
+    CreateRecvThread();
+    Send(heartbeat_str);
+    return 0;
 }
 
 int UdpConnection::Accept(const char* host, int port)
@@ -58,7 +61,7 @@ int UdpConnection::Accept(const char* host, int port)
     std::memset(&remote_addr_, 0, sizeof(remote_addr_));
 
     sockfd_ = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    set_socket_blocking(sockfd_, false);
+    //set_socket_blocking(sockfd_, false);
     sockaddr_in addr_info;
     addr_info.sin_family = AF_INET;
     addr_info.sin_addr.s_addr = inet_addr(host);
@@ -66,6 +69,7 @@ int UdpConnection::Accept(const char* host, int port)
     ::bind(sockfd_, (const sockaddr*)&addr_info, sizeof(addr_info));
 
     CreateKcp();
+    CreateRecvThread();
     return 0;
 }
 
@@ -81,6 +85,47 @@ void UdpConnection::CreateKcp()
     kcp_->writelog = UdpConnection::WriteLog;
     ikcp_setmtu(kcp_, kMTU);
     //ikcp_nodelay(kcp_, 0, 100, 0, 0);
+}
+
+
+void UdpConnection::RecvListener()
+{
+    while (true)
+    {
+        char buf[kMTU] = {0};
+        sockaddr_in addrinfo;
+        socklen_t len = sizeof(addrinfo);
+        ssize_t count = ::recvfrom(sockfd_, buf, kMTU, 0, (sockaddr*)&addrinfo, &len);
+        if (count > 0)
+        {
+            if (is_waiting())
+            {
+                std::memcpy(&remote_addr_, &addrinfo, sizeof(remote_addr_));
+                std::cout << "new connect from " << inet_ntoa(addrinfo.sin_addr) << ":" << ntohs(addrinfo.sin_port) << std::endl;
+                Send(heartbeat_str);
+            }
+
+            if (addrinfo.sin_addr.s_addr == remote_addr_.sin_addr.s_addr)
+            {
+                std::string data(buf, count);
+                std::lock_guard<std::mutex> guard(recv_mutex_);
+                recv_queue_.push(data);
+            }
+        }
+        else if (count < 0)
+        {
+#if defined(_WIN64) || defined(_WIN32)
+            int error = WSAGetLastError();
+            if (error != WSAEWOULDBLOCK)
+                std::cout << "error " << error << " occurs when call recvfrom" << std::endl;
+#endif
+        }
+    }
+}
+
+void UdpConnection::CreateRecvThread()
+{
+    std::thread(std::bind(std::mem_fn(&UdpConnection::RecvListener), this)).detach();
 }
 
 size_t UdpConnection::Send(std::string& data)
@@ -152,34 +197,20 @@ void UdpConnection::Update()
     ikcp_update(kcp_, time_now);
     last_update_time_ = time_now;
 
-    char buf[kMTU] = {0};
-    sockaddr_in addrinfo;
-    socklen_t len = sizeof(addrinfo);
-    ssize_t count = ::recvfrom(sockfd_, buf, kMTU, 0, (sockaddr*)&addrinfo, &len);
-
-    if (count > 0)
+    std::queue<std::string> recv_queue;
     {
-        if (is_waiting())
-        {
-            std::memcpy(&remote_addr_, &addrinfo, sizeof(remote_addr_));
-            std::cout << "new connect from " << inet_ntoa(addrinfo.sin_addr) << ":" << ntohs(addrinfo.sin_port) << std::endl;
-            Send(heartbeat_str);
-        }
-
-        if (addrinfo.sin_addr.s_addr == remote_addr_.sin_addr.s_addr)
-        {
-            ikcp_input(kcp_, buf, count);
-            if (kcp_->ackcount > 0)
-                ikcp_flush(kcp_);
-        }
+        std::lock_guard<std::mutex> guard(recv_mutex_);
+        recv_queue.swap(recv_queue_);
     }
-    else if (count < 0)
+    while (recv_queue.size() > 0)
     {
-#if defined(_WIN64) || defined(_WIN32)
-        int error = WSAGetLastError();
-        if (error != WSAEWOULDBLOCK)
-            std::cout << "error " << error << " occurs when call recvfrom" << std::endl;
-#endif
+        std::string& data = recv_queue.front();
+
+        ikcp_input(kcp_, data.c_str(), data.size());
+        if (kcp_->ackcount > 0)
+            ikcp_flush(kcp_);
+            
+        recv_queue.pop();
     }
 }
 
