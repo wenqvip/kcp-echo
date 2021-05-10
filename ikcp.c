@@ -1203,7 +1203,7 @@ void ikcp_update(ikcpcb *kcp, IUINT32 current)
 
 	if (kcp->updated == 0) {
 		kcp->updated = 1;
-		kcp->ts_flush = kcp->current;//如果是第一次运行update，那么下次flush时间显示就是current
+		kcp->ts_flush = kcp->current;//如果是第一次运行update，那么下次flush时间就是current
 	}
 
 	slap = _itimediff(kcp->current, kcp->ts_flush);
