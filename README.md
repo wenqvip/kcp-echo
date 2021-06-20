@@ -5,9 +5,6 @@ For better reading of kcp code, I also add some comments in it. Welcome to check
 ### How to compile:
 * Ubuntu:  
 > `sudo apt install -y gcc-8 g++-8`  
-> `rm -f /usr/bin/gcc /usr/bin/g++`  
-> `ln -s /usr/bin/gcc-8 /usr/bin/gcc`  
-> `ln -s /usr/bin/g++-8 /usr/bin/g++`  
 > `make`  
 * Windows:  
 open `./vsproject/mystorm.sln` with Visual Studio 2019 and compile with c++17  
