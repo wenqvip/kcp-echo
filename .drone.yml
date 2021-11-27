@@ -7,5 +7,6 @@ steps:
 - name: build
   image: ubuntu
   commands:
+  - apt update
   - apt install -y gcc-8 g++-8
   - make
