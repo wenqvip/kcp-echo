@@ -5,7 +5,7 @@ name: default
 
 steps:
 - name: build
-  image: gcc
+  image: debian
   commands:
   - sudo apt install -y gcc-8 g++-8
   - make
