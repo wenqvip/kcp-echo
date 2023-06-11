@@ -29,7 +29,7 @@ DEFINES=MACOS # example: MACRO1 MACRO2
 INCLUDE_PATH= # example: ../test_lib ../test_lib2
 LIBRARY_PATH= # exampel: ../test_lib ../test_lib2
 STATIC_LIB= # example: ../test_lib/test.a ../test_lib/test2.a
-DYNAMIC_LIB= # example: pthread curl
+DYNAMIC_LIB=pthread stdc++ # example: pthread curl
 ARG_m32=#-m32 #compile for 32-bit
 ARG_v=#-v
 ARG_g=-g #for gdb
@@ -89,11 +89,11 @@ endif
 
 $(DIR_DEPS)/%.d : %.cpp
 	@[ -d $(DIR_DEPS) ] || mkdir -p $(DIR_DEPS)
-	$(CXX) $(ARG_INCLUDE_PATH) -MM -MD $< -o $@
+	$(CXX) $(ARG_INCLUDE_PATH) -MM $< -o $@
 
 $(DIR_DEPS)/%.d : %.c
 	@[ -d $(DIR_DEPS) ] || mkdir -p $(DIR_DEPS)
-	$(CC) $(ARG_INCLUDE_PATH) -MM -MD $< -o $@
+	$(CC) $(ARG_INCLUDE_PATH) -MM $< -o $@
 
 -include $(addprefix $(DIR_DEPS)/,$(DEPS))
 

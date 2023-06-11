@@ -8,5 +8,5 @@ steps:
   image: ubuntu
   commands:
   - apt update
-  - apt install -y make gcc-8 g++-8
+  - apt install -y make clang
   - make
