@@ -1,4 +1,4 @@
-# kcp-echo ![C/C++ CI](https://github.com/wenqvip/kcp-echo/workflows/C/C++%20CI/badge.svg?branch=master)
+# kcp-echo ![C/C++ CI](https://github.com/wenqvip/kcp-echo/workflows/C/C++%20CI/badge.svg?branch=master)[![Build Status](https://drone.wenqlive.cn:7200/api/badges/wenqvip/kcp-echo/status.svg)](https://drone.wenqlive.cn:7200/wenqvip/kcp-echo)
 
 A echo server/client with KCP  
 For better reading of code, I also add some comments in it. Welcome to check them.

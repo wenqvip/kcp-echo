@@ -15,9 +15,6 @@ jobs:
     - uses: actions/checkout@v2
     - name: install depends
       run: |
-        sudo apt -y install gcc-8 g++-8
-        sudo rm -f /usr/bin/gcc /usr/bin/g++
-        sudo ln -s /usr/bin/gcc-8 /usr/bin/gcc
-        sudo ln -s /usr/bin/g++-8 /usr/bin/g++
+        sudo apt -y install clang
     - name: make
       run: make
