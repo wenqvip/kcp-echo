@@ -8,7 +8,7 @@
 #include <cstring>
 #include <thread>
 
-#ifdef LINUX
+#if defined(LINUX) || defined(MACOS)
 #include <fcntl.h>
 #endif
 
@@ -25,7 +25,7 @@ int UdpConnection::Init()
     WORD sockVersion = MAKEWORD(2, 2);
     return WSAStartup(sockVersion, &wsaData);
 #endif
-#ifdef LINUX
+#if defined(LINUX) || defined(MACOS)
     return 0;
 #endif
 }
@@ -36,7 +36,7 @@ int UdpConnection::DeInit()
     closesocket(sockfd_);
     return WSACleanup();
 #endif
-#ifdef LINUX
+#if defined(LINUX) || defined(MACOS)
     return 0;
 #endif
 }
@@ -233,7 +233,7 @@ void UdpConnection::WriteLog(const char* log, struct IKCPCB* kcp, void* user)
 
 bool UdpConnection::set_socket_blocking(int fd, bool blocking)
 {
-#ifdef LINUX
+#if defined(LINUX) || defined(MACOS)
     if (fd < 0) return false;
 
     int flags = fcntl(fd, F_GETFL, 0);
