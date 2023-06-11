@@ -5,8 +5,6 @@ name: default
 
 steps:
 - name: build
-  image: ubuntu
+  image: silkeh/clang
   commands:
-  - apt update
-  - apt install -y make clang
   - make

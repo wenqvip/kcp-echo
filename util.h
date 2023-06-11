@@ -9,17 +9,7 @@ typedef int socklen_t;
 typedef SOCKET socket_t;
 #endif
 
-#ifdef LINUX
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <unistd.h>
-
-typedef int socket_t;
-#endif
-
-#ifdef MACOS
+#if defined(LINUX) || defined(DARWIN)
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>

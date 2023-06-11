@@ -5,11 +5,12 @@ For better reading of code, I also add some comments in it. Welcome to check the
 
 ## How to compile
 
-- Ubuntu:  
-  
+- Linux or Mac:  
+
+    install clang firstly, then use make in console:
+
     ```shell
-    sudo apt install -y clang
-    make
+    make all
     ```
 
 - Windows:  

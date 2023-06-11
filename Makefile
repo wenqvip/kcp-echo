@@ -25,16 +25,35 @@ REJECT_SRCS= # example: a.cpp b.cpp
 #vpath %.cpp ./subfold2
 
 # some options
-DEFINES=MACOS # example: MACRO1 MACRO2
-INCLUDE_PATH= # example: ../test_lib ../test_lib2
-LIBRARY_PATH= # exampel: ../test_lib ../test_lib2
-STATIC_LIB= # example: ../test_lib/test.a ../test_lib/test2.a
-DYNAMIC_LIB=pthread stdc++ # example: pthread curl
-ARG_m32=#-m32 #compile for 32-bit
-ARG_v=#-v
-ARG_g=-g #for gdb
-ARG_O=#-O2 #optimization
-STD=c++17 #c++ feature
+# example: MACRO1 MACRO2
+DEFINES=
+
+# example: ../test_lib ../test_lib2
+INCLUDE_PATH=
+
+# exampel: ../test_lib ../test_lib2
+LIBRARY_PATH=
+
+# example: ../test_lib/test.a ../test_lib/test2.a
+STATIC_LIB= 
+
+# example: pthread curl
+DYNAMIC_LIB=pthread stdc++
+
+#compile for 32-bit
+ARG_m32=#-m32 
+
+#-v verbose
+ARG_v=
+
+#for gdb
+ARG_g=-g
+
+#-O2 #optimization
+ARG_O=
+
+#c++ feature
+STD=c++17
 
 # if you have some other directories need to be compile before this directory,
 # add them here for example: PRE_MAKE_DIRS=../a_lib_proj
@@ -43,7 +62,8 @@ PRE_MAKE_DIRS= # example: ../test_lib
 
 
 # *----------------------NO NEED TO MODIFY BELOW---------------------------*
-ARG_DEFINES=$(addprefix -D,$(DEFINES))
+ARCH=$(shell uname -s | awk '{print toupper($0)}')
+ARG_DEFINES=$(addprefix -D,$(DEFINES) $(ARCH))
 ARG_INCLUDE_PATH=$(addprefix -I,$(INCLUDE_PATH))
 ARG_LIBRARY_PATH=$(addprefix -L,$(LIBRARY_PATH))
 ARG_LLIB=$(addprefix -l,$(DYNAMIC_LIB)) $(STATIC_LIB)
